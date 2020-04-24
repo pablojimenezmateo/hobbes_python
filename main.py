@@ -9,6 +9,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.treeview import TreeView, TreeViewLabel
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
+from kivy.graphics import Rectangle
 
 
 class FolderTreeViewContextMenu(Popup):
@@ -142,7 +143,10 @@ class NoteLabel(Label):
         super(NoteLabel, self).__init__(**kwargs)
 
         self.context_menu = context_menu
+        self.color = (1, 0, 0, 1)
 
+        Rectangle(pos=self.pos, size=self.size)
+        
     def on_touch_down(self, touch):
 
         if self.collide_point(touch.x, touch.y):
@@ -156,6 +160,10 @@ class NoteLabel(Label):
                 self.context_menu.menu_opened(self)
 
             return True
+
+    def on_size(self, *args):
+
+            Rectangle(pos=self.pos, size=self.size)
 
 class NoteView(StackLayout):
 
@@ -200,7 +208,7 @@ class MainScreen(BoxLayout):
         #  With size_hint you can set up the percentage you want to be used by an element (.3 = 30%)
         self.add_widget(self.folder_tree_view)
         self.add_widget(self.notes_view)
-        self.add_widget(Label(text='Right', size_hint=(.6, 1), pos_hint={'top':.01}))
+        self.add_widget(Label(text='Right', size_hint=(.6, 1)))
 
     # This method will be in charge of all the input actions
     def on_touch_down(self, touch):

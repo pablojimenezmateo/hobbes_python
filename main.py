@@ -9,7 +9,10 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.treeview import TreeView, TreeViewLabel
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
+from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Rectangle
+from kivy.uix.textinput import TextInput
+from kivy.core.window import Window
 
 
 class FolderTreeViewContextMenu(Popup):
@@ -115,6 +118,66 @@ class FolderTreeView(TreeView):
         n1 = self.add_node(TreeViewLabel(text='Item 1'))
         self.add_node(TreeViewLabel(text='SubItem 1'), n1)
         self.add_node(TreeViewLabel(text='SubItem 2'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 3'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 4'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
 
         # Context menu
         self.context_menu = FolderTreeViewContextMenu(size_hint=(.2, .2))
@@ -161,32 +224,151 @@ class NoteLabel(Label):
 
             return True
 
-    def on_size(self, *args):
 
-            Rectangle(pos=self.pos, size=self.size)
+class NoteButton(Button):
 
-class NoteView(StackLayout):
+    def __init__(self, context_menu, **kwargs):
+        super(NoteButton, self).__init__(**kwargs)
+
+        self.context_menu = context_menu
+
+        # Text color
+        self.color = (0, 0, 0, 1)
+
+        # Button color
+        #self.background_normal = ''
+        #self.background_down   = ''
+        self.background_color  = (0.569, 0.667, 0.616, 1)
+        
+    def on_touch_down(self, touch):
+
+        if self.collide_point(touch.x, touch.y):
+
+            print("I have been touched ", self.text)
+
+            if touch.button == 'right':
+
+                self.context_menu.menu_opened(self)
+
+            return super(NoteButton, self).on_touch_down(touch)
+
+class NoteView(ScrollView):
 
     def __init__(self, **kwargs):
         super(NoteView, self).__init__(**kwargs)
+
+        self.scrolltype = ['bars', 'content']
+
+        # Create the StackLayout
+        self.layout = StackLayout(orientation='tb-lr')
+        self.layout.bind(minimum_height=self.layout.setter('height'))
 
         # Context menu
         self.context_menu = NoteViewContextMenu(size_hint=(.2, .2))
 
         # Notes test
-        self.size_hint=(.2, 1)
-        self.add_widget(NoteLabel(context_menu=self.context_menu, text='Note 1', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
-        self.add_widget(NoteLabel(context_menu=self.context_menu, text='Note 2', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
-        self.add_widget(NoteLabel(context_menu=self.context_menu, text='Note 3', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
-        self.add_widget(NoteLabel(context_menu=self.context_menu, text='Note 4', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
-        self.add_widget(NoteLabel(context_menu=self.context_menu, text='Note 5', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
-        self.add_widget(NoteLabel(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        #self.size_hint=(.2, None)
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 1', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 2', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 3', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 4', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 5', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+        self.layout.add_widget(NoteButton(context_menu=self.context_menu, text='Note 6', size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+
+        self.add_widget(self.layout)
 
 #    def custom_event_handler(self, touch):
 
 #        return super(NoteView, self).on_touch_down(touch)
 
+class NoteTextInput(TextInput):
 
+    def __init__(self, **kwargs):
+        super(NoteTextInput, self).__init__(**kwargs)
 
 '''
     This is the Layout of the main screen of the application
@@ -199,16 +381,18 @@ class MainScreen(BoxLayout):
         # Orientation of the Box Layouts
         self.orientation='horizontal'
 
-        # Folders
+        # Folders view
         self.folder_tree_view = FolderTreeView()
 
-        # Notes
-        self.notes_view = NoteView(orientation='tb-lr')
+        # Notes view
+        self.notes_view = NoteView(size_hint=(.2, 1))
 
-        #  With size_hint you can set up the percentage you want to be used by an element (.3 = 30%)
+        # Notes input
+        self.note_text_input = NoteTextInput(size_hint=(.6, 1), font_size=20)
+
         self.add_widget(self.folder_tree_view)
         self.add_widget(self.notes_view)
-        self.add_widget(Label(text='Right', size_hint=(.6, 1)))
+        self.add_widget(self.note_text_input)
 
     # This method will be in charge of all the input actions
     def on_touch_down(self, touch):
@@ -224,16 +408,16 @@ class MainScreen(BoxLayout):
         #
         #   return self.notes_view.custom_event_handler(touch)
 
-        elif self.collide_point(touch.x, touch.y):
+        else:
 
             print("Outside tree")
             return super(MainScreen, self).on_touch_down(touch)
 
-class Hobbes(App):
+class HobbesApp(App):
 
     def build(self):
         return MainScreen()
 
 
 if __name__ == '__main__':
-    Hobbes().run()
+    HobbesApp().run()

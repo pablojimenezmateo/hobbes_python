@@ -1,0 +1,40 @@
+<FolderTreeView>:
+    
+    canvas.before:
+        Color:
+            rgba: 0.098, 0.203, 0.255, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+<NoteView>
+
+	minimum_height: self.height
+	pos_hint: {'top': 1, 'y': 0}
+
+    do_scroll_x: False
+    do_scroll_y: True
+
+	canvas.before:
+		Color:
+			rgba: 0.243, 0.376, 0.435, 1
+		Rectangle:
+			pos: self.pos
+			size: self.width, self.height
+
+<NoteButton>
+
+    background_normal: 'images/button_normal.png'
+    background_down: 'images/button_down.png'
+
+	canvas.before:
+		Color:
+			rgba: 0.569, 0.667, 0.616, 1
+		Rectangle:
+			pos: self.pos
+			size: self.width, self.height
+
+        Color:
+            rgba: 0, 0, 0, 1
+        Line:
+            width: 1
+            rectangle: self.x, self.y, self.width, self.height

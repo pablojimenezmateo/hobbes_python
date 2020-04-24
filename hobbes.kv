@@ -1,3 +1,5 @@
+#: import Window kivy.core.window.Window
+
 <FolderTreeView>:
     
     canvas.before:
@@ -8,7 +10,9 @@
             size: self.size
 <NoteView>
 
-	minimum_height: self.height
+    size_hint: (1, None)
+    size: (100, Window.height)
+
 	pos_hint: {'top': 1, 'y': 0}
 
     do_scroll_x: False

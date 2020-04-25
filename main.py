@@ -107,96 +107,93 @@ class NoteViewContextMenu(Popup):
 '''
     This is a custom Tree View to view the folders
 '''
-class FolderTreeView(ScrollView):
+class FolderTreeView(TreeView):
 
     def __init__(self, **kwargs):
         super(FolderTreeView, self).__init__(**kwargs)
 
-        self.tree_view = TreeView(size_hint_y=5)
-
         # Tree test
-        self.size_hint=(.2, 1)
-        self.tree_view.hide_root=True
+        #self.size_hint=(.2, 5)
+        self.hide_root=True
         #self.tree_view.size_hint=(1, 1)
+        self.bind(minimum_height = self.setter('height'))
 
-        n1 = self.tree_view.add_node(TreeViewLabel(text='Item 1'))
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 1'), n1)
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 2'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 3'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 4'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
-        self.tree_view.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        n1 = self.add_node(TreeViewLabel(text='Item 1'))
+        self.add_node(TreeViewLabel(text='SubItem 1'), n1)
+        self.add_node(TreeViewLabel(text='SubItem 2'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 3'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 4'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
+        self.add_node(TreeViewLabel(text='SubItem 5'), n1)     
 
         # Context menu
         self.context_menu = FolderTreeViewContextMenu(size_hint=(.2, .2))
-
-        self.content = self.tree_view
 
     def custom_event_handler(self, touch):
 
         print("On tree")
 
-        active_node = self.tree_view.get_node_at_pos(touch.pos)
+        active_node = self.get_node_at_pos(touch.pos)
         
         if active_node != None:
 
-            print("Node:", self.tree_view.get_node_at_pos(touch.pos).text)
+            print("Node:", self.get_node_at_pos(touch.pos).text)
 
             if touch.button == 'right':
 
@@ -303,7 +300,9 @@ class MainScreen(BoxLayout):
         self.orientation='horizontal'
 
         # Folders view
-        self.folder_tree_view = FolderTreeView()
+        root = ScrollView(size_hint=(.2, 1))
+        root.add_widget(FolderTreeView(size_hint_y=None))
+        self.folder_tree_view = root
 
         # Notes view
         self.notes_view = NoteView(size_hint=(.2, 1))
@@ -323,7 +322,9 @@ class MainScreen(BoxLayout):
 
         if self.folder_tree_view.collide_point(touch.x, touch.y):
 
-            return self.folder_tree_view.custom_event_handler(touch)
+            return super(MainScreen, self).on_touch_down(touch)
+
+            #return self.folder_tree_view.custom_event_handler(touch)
 
         #elif self.notes_view.collide_point(touch.x, touch.y):
         #

@@ -1,29 +1,27 @@
 #: import Window kivy.core.window.Window
 
-<FolderTreeView>:
-
-    do_scroll_x: False
-    do_scroll_y: True
+<MainScreen>:
 
     canvas.before:
         Color:
-            rgba: 0.098, 0.203, 0.255, 1
+            rgba: 0.098, 0.203, 0.255, 1 # Folder list background color
         Rectangle:
             pos: self.pos
-            size: self.size
-<NoteView>
+            size: (Window.width*0.2, Window.height)
 
-	pos_hint: {'top': 1, 'y': 0}
+        Color:
+            rgba: 0.243, 0.376, 0.435, 1 # Note list background color
+        Rectangle:
+            pos: (Window.width*0.2, 0)
+            size: (Window.width*0.2, Window.height)
+
+<ScrollView>:
 
     do_scroll_x: False
     do_scroll_y: True
 
-	canvas.before:
-		Color:
-			rgba: 0.243, 0.376, 0.435, 1
-		Rectangle:
-			pos: self.pos
-			size: self.width, self.height
+    size_hint: (1,None)
+    size: (Window.width, Window.height)
 
 <NoteButton>
 

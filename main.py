@@ -4,7 +4,6 @@ kivy.require('1.11.1') # replace with your current kivy version !
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.stacklayout import StackLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout 
 from kivy.uix.treeview import TreeView, TreeViewLabel
@@ -16,6 +15,9 @@ from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
 
+'''
+    Contextual menu for the folder view
+'''
 class FolderTreeViewContextMenu(Popup):
 
     def __init__(self, **kwargs):
@@ -57,6 +59,9 @@ class FolderTreeViewContextMenu(Popup):
 
             print("Creating folder on folder ", self.current_folder.text)
 
+'''
+    Contextual menu for the note view
+'''
 class NoteViewContextMenu(Popup):
 
     def __init__(self, **kwargs):
@@ -105,6 +110,7 @@ class NoteViewContextMenu(Popup):
         if self.current_note != None:
 
             print("Delete note", self.current_note.text)
+
 '''
     This is a custom Tree View to view the folders
 '''
@@ -113,22 +119,18 @@ class FolderTreeView(TreeView):
     def __init__(self, **kwargs):
         super(FolderTreeView, self).__init__(**kwargs)
 
-        # Tree test
-        #self.size_hint=(.2, 5)
         self.hide_root=True
-        #self.tree_view.size_hint=(1, 1)
         self.bind(minimum_height = self.setter('height'))
 
+        # Tree test
         n1 = self.add_node(TreeViewLabel(text='Folder 1'))
 
         for i in range(50):
 
             self.add_node(TreeViewLabel(text='Subfolder ' + str(i+1)), n1)
  
-
         n2 = self.add_node(TreeViewLabel(text='Folder 2'))
         self.add_node(TreeViewLabel(text='SubItem 5'), n2) 
-
 
         # Context menu
         self.context_menu = FolderTreeViewContextMenu(size_hint=(.2, .2))
@@ -137,44 +139,19 @@ class FolderTreeView(TreeView):
 
         print("On tree")
 
-        active_node = self.get_node_at_pos(touch.pos)
+        active_node = self.get_node_at_pos((touch.x, touch.y))
         
         if active_node != None:
 
-            print("Node:", self.get_node_at_pos(touch.pos).text)
+            print("Node:", active_node.text)
 
             if touch.button == 'right':
 
                 self.context_menu.menu_opened(active_node)
                 return True
-
-        return super(FolderTreeView, self).on_touch_down(touch)
-
-
-class NoteLabel(Label):
-
-    def __init__(self, context_menu, **kwargs):
-        super(NoteLabel, self).__init__(**kwargs)
-
-        self.context_menu = context_menu
-        self.color = (1, 0, 0, 1)
-
-        Rectangle(pos=self.pos, size=self.size)
-        
-    def on_touch_down(self, touch):
-
-        if self.collide_point(touch.x, touch.y):
-
-            print("I have been touched ", self.text)
-
-
-            if touch.button == 'right':
-
-                self.context_menu.menu_opened(self)
-
-            return True
-
-
+'''
+    Each of the notes is represented by one button
+'''
 class NoteButton(Button):
 
     def __init__(self, context_menu, **kwargs):
@@ -186,8 +163,6 @@ class NoteButton(Button):
         self.color = (0, 0, 0, 1)
 
         # Button color
-        #self.background_normal = ''
-        #self.background_down   = ''
         self.background_color  = (0.569, 0.667, 0.616, 1)
         
     def on_touch_down(self, touch):
@@ -202,6 +177,9 @@ class NoteButton(Button):
 
             return super(NoteButton, self).on_touch_down(touch)
 
+'''
+    This is the column that shows notes
+'''
 class NoteView(GridLayout):
 
     def __init__(self, **kwargs):
@@ -209,23 +187,16 @@ class NoteView(GridLayout):
 
         self.bind(minimum_height = self.setter('height'))
 
-        # Create the StackLayout
-        #self.layout = StackLayout(orientation='tb-lr', size_hint_y=5)
-
         # Context menu
         self.context_menu = NoteViewContextMenu(size_hint=(.2, .2))
 
         # Notes test
-        #self.size_hint=(.2, None)
-        #self.add_widget(Label(text="Test", size_hint=(1, None), size=(0, 20)))
-
         for i in range(50):
             self.add_widget(NoteButton(context_menu=self.context_menu, text='Note ' + str(i+1), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
 
-#    def custom_event_handler(self, touch):
-
-#        return super(NoteView, self).on_touch_down(touch)
-
+'''
+    This will be used to edit notes
+'''
 class NoteTextInput(TextInput):
 
     def __init__(self, **kwargs):
@@ -243,46 +214,44 @@ class MainScreen(BoxLayout):
         self.orientation='horizontal'
 
         # Folders view
-        self.folder_tree_view = ScrollView(size_hint=(.2, 1))
-        self.folder_tree_view.add_widget(FolderTreeView(size_hint_y=None))
+        self.folder_tree_view_scroll = ScrollView(size_hint=(.2, 1))
+        self.folder_tree_view = FolderTreeView(size_hint_y=None)
+        self.folder_tree_view_scroll.add_widget(self.folder_tree_view)
 
         # Notes view
-        self.notes_view = ScrollView(size_hint=(.2, None))
-        self.notes_view.add_widget(NoteView(cols=1, size_hint=(1, None)))
+        self.notes_view_scroll = ScrollView(size_hint=(.2, None))
+        self.notes_view = NoteView(cols=1, size_hint=(1, None))
+        self.notes_view_scroll.add_widget(self.notes_view)
 
         # Notes input
         self.note_text_input = NoteTextInput(size_hint=(.6, 1), font_size=20)
 
-        self.add_widget(self.folder_tree_view)
-        self.add_widget(self.notes_view)
+        self.add_widget(self.folder_tree_view_scroll)
+        self.add_widget(self.notes_view_scroll)
         self.add_widget(self.note_text_input)
 
     # This method will be in charge of all the input actions
     def on_touch_down(self, touch):
 
-        print("Fired after the event has been dispatched! ", touch.x, touch.y)
-        print("Touch button: ", touch.button)
+        # Handle TreeView touch
+        if touch.button != 'scrolldown' and touch.button != 'scrollup' and self.folder_tree_view_scroll.collide_point(touch.x, touch.y):
 
-        if self.folder_tree_view.collide_point(touch.x, touch.y):
+            # Save the touch since we are making coordinates transform
+            touch.push()
 
-            return super(MainScreen, self).on_touch_down(touch)
+            # We need to fix the coordinate system since the scroll has moved the widget
+            touch.apply_transform_2d(self.folder_tree_view_scroll.to_local)
+            self.folder_tree_view.custom_event_handler(touch)
 
-            #return self.folder_tree_view.custom_event_handler(touch)
+            # Restore touch
+            touch.pop()
 
-        #elif self.notes_view.collide_point(touch.x, touch.y):
-        #
-        #   return self.notes_view.custom_event_handler(touch)
-
-        else:
-
-            print("Outside tree")
-            return super(MainScreen, self).on_touch_down(touch)
+        return super(MainScreen, self).on_touch_down(touch)
 
 class HobbesApp(App):
 
     def build(self):
         return MainScreen()
-
 
 if __name__ == '__main__':
     HobbesApp().run()

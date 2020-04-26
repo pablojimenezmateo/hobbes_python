@@ -1,5 +1,5 @@
 import kivy
-kivy.require('1.11.1') # replace with your current kivy version !
+kivy.require('1.11.1') # Kivy version
 
 from kivy.app import App
 from kivy.uix.label import Label
@@ -14,7 +14,7 @@ from kivy.graphics import Rectangle
 from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
-
+ 
 '''
     Contextual menu for the folder view
 '''
@@ -202,6 +202,38 @@ class NoteTextInput(TextInput):
     def __init__(self, **kwargs):
         super(NoteTextInput, self).__init__(**kwargs)
 
+        self.font_size = 20
+
+class NoteTextRenderer(Label):
+
+    def __init__(self, **kwargs):
+        super(NoteTextRenderer, self).__init__(**kwargs)
+
+        self.markup = True
+        self.font_size = 20
+        self.halign ='right'
+        self.valign = 'middle'
+'''
+    Combination of the text editor and renderer
+'''
+class NoteTextPanel(BoxLayout):
+
+        note_text_input = NoteTextInput(size_hint=(.5, 1), multiline=True)
+        note_text_renderer = NoteTextRenderer(size_hint=(.5, 1))
+
+        def __init__(self, **kwargs):
+            super(NoteTextPanel, self).__init__(**kwargs)
+
+            self.orientation = 'horizontal'
+            self.add_widget(self.note_text_input)
+            self.note_text_input.bind(text=self.on_input_text)
+
+            self.add_widget(self.note_text_renderer)
+
+        def on_input_text(self, instance, text):
+
+            self.note_text_renderer.text = text
+
 '''
     This is the Layout of the main screen of the application
 '''
@@ -224,7 +256,7 @@ class MainScreen(BoxLayout):
         self.notes_view_scroll.add_widget(self.notes_view)
 
         # Notes input
-        self.note_text_input = NoteTextInput(size_hint=(.6, 1), font_size=20)
+        self.note_text_input = NoteTextPanel(size_hint=(.6, 1))
 
         self.add_widget(self.folder_tree_view_scroll)
         self.add_widget(self.notes_view_scroll)

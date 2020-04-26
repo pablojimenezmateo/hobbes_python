@@ -259,22 +259,18 @@ class NoteTextPanel(BoxLayout):
 
             if self.toggle_status == 0:
 
-                print("split")
-                self.note_text_input.size_hint_x = .5
-                self.note_text_renderer.size_hint_x = .5
+                self.add_widget(self.note_text_input, 1)
+                self.note_text_input.disabled = False
 
             elif self.toggle_status == 1:
 
-                print("text")
-                self.note_text_input.size_hint_x = 1
-                self.note_text_renderer.size_hint_x = 0
+                self.remove_widget(self.note_text_renderer)
 
             else:
 
-                print("renderer")
-                self.note_text_input.size_hint_x = 0
-                self.note_text_renderer.size_hint_x = 1
-
+                self.remove_widget(self.note_text_input)
+                self.add_widget(self.note_text_renderer)
+                self.note_text_input.disabled = True
 
 '''
     This is the Layout of the main screen of the application

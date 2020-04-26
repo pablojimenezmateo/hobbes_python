@@ -14,7 +14,10 @@ from kivy.graphics import Rectangle
 from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
- 
+from kivy.uix.rst import RstDocument
+
+from m2r import convert
+
 '''
     Contextual menu for the folder view
 '''
@@ -160,10 +163,10 @@ class NoteButton(Button):
         self.context_menu = context_menu
 
         # Text color
-        self.color = (0, 0, 0, 1)
+        #self.color = (1, 1, 1, 1)
 
         # Button color
-        self.background_color  = (0.569, 0.667, 0.616, 1)
+        #self.background_color  = (0, 0, 0, 0.5) #(0.569, 0.667, 0.616, 1)
         
     def on_touch_down(self, touch):
 
@@ -202,37 +205,76 @@ class NoteTextInput(TextInput):
     def __init__(self, **kwargs):
         super(NoteTextInput, self).__init__(**kwargs)
 
-        self.font_size = 20
+        self.font_size = 24
+        self.background_normal = ''
+        self.padding = [16, 15, 6, 6]
 
-class NoteTextRenderer(Label):
+class NoteTextRenderer(RstDocument):
 
     def __init__(self, **kwargs):
         super(NoteTextRenderer, self).__init__(**kwargs)
 
-        self.markup = True
-        self.font_size = 20
-        self.halign ='right'
-        self.valign = 'middle'
+        # Available colors
+        #{'background': 'ffffffff', 'link': 'ce5c00ff', 'paragraph': '202020ff', 'title': '204a87ff', 'bullet': '000000ff'}
+
+        # Set the background color to white
+        self.background_color = (1, 1, 1, 1)
+
+        #  Set the color of the underline of the titles
+        self.underline_color = '000000FF'
+
+        # Set the size of the title, the rest of the font sizes are derived from this
+        self.base_font_size = 48
+
 '''
-    Combination of the text editor and renderer
+    Combination of the text editor and renderer, I  write my notes in Markdown but the renderer is in reStructuredText
 '''
 class NoteTextPanel(BoxLayout):
 
-        note_text_input = NoteTextInput(size_hint=(.5, 1), multiline=True)
+        note_text_input    = NoteTextInput(size_hint=(.5, 1), multiline=True)
         note_text_renderer = NoteTextRenderer(size_hint=(.5, 1))
+
+        # Possible view status: 0 = split, 1 = Note, 2 = renderer
+        toggle_status = 0
 
         def __init__(self, **kwargs):
             super(NoteTextPanel, self).__init__(**kwargs)
 
             self.orientation = 'horizontal'
             self.add_widget(self.note_text_input)
+
+            # Listen to input text and render it realtime
             self.note_text_input.bind(text=self.on_input_text)
 
             self.add_widget(self.note_text_renderer)
 
         def on_input_text(self, instance, text):
 
-            self.note_text_renderer.text = text
+            self.note_text_renderer.text = convert(text)
+
+        # Toggle between split view, text or renderer
+        def toggle(self):
+
+            self.toggle_status = (self.toggle_status + 1) % 3
+
+            if self.toggle_status == 0:
+
+                print("split")
+                self.note_text_input.size_hint_x = .5
+                self.note_text_renderer.size_hint_x = .5
+
+            elif self.toggle_status == 1:
+
+                print("text")
+                self.note_text_input.size_hint_x = 1
+                self.note_text_renderer.size_hint_x = 0
+
+            else:
+
+                print("renderer")
+                self.note_text_input.size_hint_x = 0
+                self.note_text_renderer.size_hint_x = 1
+
 
 '''
     This is the Layout of the main screen of the application
@@ -262,6 +304,9 @@ class MainScreen(BoxLayout):
         self.add_widget(self.notes_view_scroll)
         self.add_widget(self.note_text_input)
 
+        # Listen for keyboard events
+        Window.bind(on_keyboard=self.on_keyboard)
+
     # This method will be in charge of all the input actions
     def on_touch_down(self, touch):
 
@@ -279,6 +324,13 @@ class MainScreen(BoxLayout):
             touch.pop()
 
         return super(MainScreen, self).on_touch_down(touch)
+
+    # React to key combinations
+    def on_keyboard(self, window, key, scancode, codepoint, modifier):
+
+        if 'ctrl' in modifier and codepoint == 'l':
+
+            self.note_text_input.toggle()
 
 class HobbesApp(App):
 

@@ -15,14 +15,6 @@
             pos: (Window.width*0.2, 0)
             size: (Window.width*0.2, Window.height)
 
-<NoteTextRenderer>:
-
-    text_size: self.size
-    halign: 'right'
-    valign: 'middle'
-
-
-
 <ScrollView>:
 
     do_scroll_x: False
@@ -35,14 +27,10 @@
 
     background_normal: 'images/button_normal.png'
     background_down: 'images/button_down.png'
+    background_color: 1, 1, 1, 1 # Note button color
+    color: 0, 0, 0, 1 # Note text color
 
 	canvas.before:
-		Color:
-			rgba: 0.569, 0.667, 0.616, 1
-		Rectangle:
-			pos: self.pos
-			size: self.width, self.height
-
         Color:
             rgba: 0, 0, 0, 1
         Line:

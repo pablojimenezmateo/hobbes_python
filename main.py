@@ -19,6 +19,7 @@ from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.uix.rst import RstDocument
+from kivy.clock import Clock
 
 # Filesystem
 import os
@@ -233,9 +234,10 @@ class NoteButton(Button):
 '''
 class NoteView(GridLayout):
 
-    def __init__(self, **kwargs):
+    def __init__(self, note_text_panel, **kwargs):
 
         self.active_note = None
+        self.note_text_panel = note_text_panel
 
         super(NoteView, self).__init__(**kwargs)
 
@@ -258,12 +260,16 @@ class NoteView(GridLayout):
     '''
     def activate_note(self, note):
 
+        # Background logic
         if self.active_note != None:
 
             self.active_note.background_color = (1, 1, 1, 1) # Background color of note
 
         note.background_color  = (1, 1, 1, 0.5) # Background color when selected
         self.active_note = note
+
+        # Send note to text input
+        self.note_text_panel.load_note(self.active_note.path)
 
 
 '''
@@ -303,6 +309,8 @@ class NoteTextPanel(BoxLayout):
         note_text_input    = NoteTextInput(size_hint=(.5, 1), multiline=True)
         note_text_renderer = NoteTextRenderer(size_hint=(.5, 1))
 
+        current_note = None
+
         # Possible view status: 0 = split, 1 = Note, 2 = renderer
         toggle_status = 0
 
@@ -316,6 +324,9 @@ class NoteTextPanel(BoxLayout):
             self.note_text_input.bind(text=self.on_input_text)
 
             self.add_widget(self.note_text_renderer)
+
+            # Autosave each 30 seconds
+            Clock.schedule_interval(self.autosave, 30)
 
         def on_input_text(self, instance, text):
 
@@ -341,6 +352,43 @@ class NoteTextPanel(BoxLayout):
                 self.add_widget(self.note_text_renderer)
                 self.note_text_input.disabled = True
 
+        # Displays a note on the editor
+        def load_note(self, path):
+
+            if self.current_note == None:
+
+                self.current_note = path
+            else:
+
+                # Save previous note if any
+                self.save_note()
+
+            print("Load: ", path)
+
+            # Store the current path
+            self.current_note = path
+
+            # Open note
+            with open(path, 'r') as note:
+                text = note.read()
+
+            self.note_text_input.text = text
+
+        # Saves the contents of the current editor to the current note
+        def save_note(self):
+
+            if self.current_note != None:
+
+                print("Writting", self.note_text_input.text, " to", self.current_note)
+
+                with open(self.current_note, 'w') as note:
+                    note.write(self.note_text_input.text)
+
+        # Autosave function
+        def autosave(self, dt):
+
+            self.save_note()
+
 '''
     This is the Layout of the main screen of the application
 '''
@@ -352,18 +400,18 @@ class MainScreen(BoxLayout):
         # Orientation of the Box Layouts
         self.orientation='horizontal'
 
+        # Notes input panel
+        self.note_text_input = NoteTextPanel(size_hint=(.6, 1))
+
         # Notes view
         self.notes_view_scroll = ScrollView(size_hint=(.2, None))
-        self.notes_view = NoteView(cols=1, size_hint=(1, None))
+        self.notes_view = NoteView(note_text_panel=self.note_text_input, cols=1, size_hint=(1, None))
         self.notes_view_scroll.add_widget(self.notes_view, 0)
 
         # Folders view
         self.folder_tree_view_scroll = ScrollView(size_hint=(.2, 1))
         self.folder_tree_view = FolderTreeView(size_hint_y=None, notes_view=self.notes_view)
         self.folder_tree_view_scroll.add_widget(self.folder_tree_view, 1)
-
-        # Notes input
-        self.note_text_input = NoteTextPanel(size_hint=(.6, 1))
 
         self.add_widget(self.folder_tree_view_scroll)
         self.add_widget(self.notes_view_scroll)
@@ -396,6 +444,10 @@ class MainScreen(BoxLayout):
         if 'ctrl' in modifier and codepoint == 'l':
 
             self.note_text_input.toggle()
+
+        elif 'ctrl' in modifier and codepoint == 's':
+
+            self.note_text_input.save_note()
 
 class HobbesApp(App):
 

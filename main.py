@@ -1,6 +1,10 @@
 import kivy
 kivy.require('1.11.1') # Kivy version
 
+from kivy.config import Config
+# By default kivy exits when Esc is pressed, overwrite it
+Config.set('kivy', 'exit_on_escape', '0')
+
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
@@ -148,7 +152,7 @@ class FolderTreeView(TreeView):
 
             print("Node:", active_node.text)
 
-            if touch.button == 'right':
+            if touch.button == 'right' or touch.is_double_tap:
 
                 self.context_menu.menu_opened(active_node)
                 return True
@@ -171,7 +175,7 @@ class NoteButton(Button):
 
             self.note_view.activate_note(self)
 
-            if touch.button == 'right':
+            if touch.button == 'right' or touch.is_double_tap:
 
                 self.context_menu.menu_opened(self)
 

@@ -26,6 +26,14 @@ import os
 # Markdown to restructuredText
 from m2r import convert
 
+import re 
+
+def sorted_nicely(l): 
+    """ Sort the given iterable in the way that humans expect.""" 
+    convert = lambda text: int(text) if text.isdigit() else text 
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+    return sorted(l, key=alphanum_key)
+
 '''
     Contextual menu for the folder view
 '''
@@ -132,16 +140,20 @@ class FolderLabel(TreeViewLabel):
     def __init__(self, path='', **kwargs):
         super(FolderLabel, self).__init__(**kwargs)
 
+        self.path = path
+
 '''
     This is a custom Tree View to view the folders
 '''
 class FolderTreeView(TreeView):
 
-    def __init__(self, **kwargs):
+    def __init__(self, notes_view,  **kwargs):
         super(FolderTreeView, self).__init__(**kwargs)
 
         self.hide_root=True
         self.bind(minimum_height = self.setter('height'))
+
+        self.notes_view = notes_view
 
         # Traverse the db directory
         hobbes_folder = os.path.dirname(os.path.abspath(__file__))
@@ -149,64 +161,58 @@ class FolderTreeView(TreeView):
 
         added = []
 
+        # Helper functions used to sort
+        convert = lambda text: int(text) if text.isdigit() else text 
+        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+
         for root, dirs, files in os.walk(hobbes_db):
+
+            # Alfabetical order
+            dirs.sort(key=alphanum_key)
 
             level = root.replace(hobbes_db, '').count(os.sep)
 
-            # Ignore the db folder
-            if root == hobbes_db:
+            # Ignore the db folder and the attachments folder
+            if root == hobbes_db or os.path.basename(root) == '.attachments_db':
 
                 continue
 
-            # Add the rest of dolders recursively
+            # Add the rest of folders recursively
             if level == 1:
 
+                added = []
                 added.append(self.add_node(FolderLabel(text=os.path.basename(root), path=root)))
             else:
 
                 added.append(self.add_node(FolderLabel(text=os.path.basename(root), path=root), added[level-2]))
-
-
-
-#            for file in files:
-#                if file.endswith(".txt"):
-#                     print(os.path.join(root, file))
-
-        # Tree test
-        n1 = self.add_node(FolderLabel(text='Folder 1'))
-
-        for i in range(50):
-
-            self.add_node(FolderLabel(text='Subfolder ' + str(i+1)), n1)
- 
-        n2 = self.add_node(FolderLabel(text='Folder 2'))
-        self.add_node(FolderLabel(text='SubItem 5'), n2) 
 
         # Context menu
         self.context_menu = FolderTreeViewContextMenu(size_hint=(.2, .2))
 
     def custom_event_handler(self, touch):
 
-        active_node = self.get_node_at_pos((touch.x, touch.y))
-        
-        if active_node != None:
+        if touch.button != 'scrolldown' and touch.button != 'scrollup':
+            active_node = self.get_node_at_pos((touch.x, touch.y))
+            
+            if active_node != None:
 
-            print("Node:", active_node.text)
+                self.notes_view.add_notes(active_node.path)
 
-            if touch.button == 'right' or touch.is_double_tap:
+                if touch.button == 'right' or touch.is_double_tap:
 
-                self.context_menu.menu_opened(active_node)
-                return True
+                    self.context_menu.menu_opened(active_node)
+                    return True
 '''
     Each of the notes is represented by one button
 '''
 class NoteButton(Button):
 
-    def __init__(self, context_menu, note_view, **kwargs):
+    def __init__(self, context_menu, note_view, path,  **kwargs):
         super(NoteButton, self).__init__(**kwargs)
 
         self.context_menu = context_menu
         self.note_view = note_view
+        self.path = path
         
     def on_touch_down(self, touch):
 
@@ -238,10 +244,14 @@ class NoteView(GridLayout):
         # Context menu
         self.context_menu = NoteViewContextMenu(size_hint=(.2, .2))
 
-        # Notes test
-        for i in range(50):
-            self.add_widget(NoteButton(context_menu=self.context_menu, note_view=self, text='Note ' + str(i+1), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+    def add_notes(self, path):
 
+        self.clear_widgets()
+
+        for file in sorted_nicely(os.listdir(path)):
+            if file.endswith(".txt"):
+
+                self.add_widget(NoteButton(context_menu=self.context_menu, note_view=self, text=file.split(".")[0], path=os.path.join(path, file), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
 
     '''
         This function handles when a note has been activated
@@ -342,15 +352,15 @@ class MainScreen(BoxLayout):
         # Orientation of the Box Layouts
         self.orientation='horizontal'
 
-        # Folders view
-        self.folder_tree_view_scroll = ScrollView(size_hint=(.2, 1))
-        self.folder_tree_view = FolderTreeView(size_hint_y=None)
-        self.folder_tree_view_scroll.add_widget(self.folder_tree_view)
-
         # Notes view
         self.notes_view_scroll = ScrollView(size_hint=(.2, None))
         self.notes_view = NoteView(cols=1, size_hint=(1, None))
-        self.notes_view_scroll.add_widget(self.notes_view)
+        self.notes_view_scroll.add_widget(self.notes_view, 0)
+
+        # Folders view
+        self.folder_tree_view_scroll = ScrollView(size_hint=(.2, 1))
+        self.folder_tree_view = FolderTreeView(size_hint_y=None, notes_view=self.notes_view)
+        self.folder_tree_view_scroll.add_widget(self.folder_tree_view, 1)
 
         # Notes input
         self.note_text_input = NoteTextPanel(size_hint=(.6, 1))
@@ -366,7 +376,7 @@ class MainScreen(BoxLayout):
     def on_touch_down(self, touch):
 
         # Handle TreeView touch
-        if touch.button != 'scrolldown' and touch.button != 'scrollup' and self.folder_tree_view_scroll.collide_point(touch.x, touch.y):
+        if self.folder_tree_view_scroll.collide_point(touch.x, touch.y):
 
             # Save the touch since we are making coordinates transform
             touch.push()

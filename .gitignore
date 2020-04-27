@@ -1,1 +1,6 @@
 db/**
+.buildozer
+.android
+bin
+jdk-*
+

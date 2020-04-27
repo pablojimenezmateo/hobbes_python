@@ -30,7 +30,6 @@ from m2r import convert
 # Used for natural sorting
 import re 
 
-
 '''
     TODO:
 
@@ -157,6 +156,17 @@ class NoteViewContextMenu(Popup):
         if self.current_note != None:
 
             print("Delete note", self.current_note.text)
+
+    def import_note_to_pdf(self, path):
+
+        # import Markdown to pdf, it is too slow to de everytime
+        from markdown import markdown
+        from weasyprint import HTML
+
+        html = markdown(self.note_text_input.text, output_format='html4')
+
+        html = HTML(string=html)
+        html.write_pdf('/tmp/example.pdf')
 
 '''
     This represents a folder on the treeview

@@ -157,22 +157,19 @@ class FolderTreeView(TreeView):
 '''
 class NoteButton(Button):
 
-    def __init__(self, context_menu, **kwargs):
+    def __init__(self, context_menu, note_view, **kwargs):
         super(NoteButton, self).__init__(**kwargs)
 
         self.context_menu = context_menu
-
-        # Text color
-        #self.color = (1, 1, 1, 1)
-
-        # Button color
-        #self.background_color  = (0, 0, 0, 0.5) #(0.569, 0.667, 0.616, 1)
+        self.note_view = note_view
         
     def on_touch_down(self, touch):
 
         if self.collide_point(touch.x, touch.y):
 
             print("I have been touched ", self.text)
+
+            self.note_view.activate_note(self)
 
             if touch.button == 'right':
 
@@ -186,6 +183,9 @@ class NoteButton(Button):
 class NoteView(GridLayout):
 
     def __init__(self, **kwargs):
+
+        self.active_note = None
+
         super(NoteView, self).__init__(**kwargs)
 
         self.bind(minimum_height = self.setter('height'))
@@ -195,7 +195,21 @@ class NoteView(GridLayout):
 
         # Notes test
         for i in range(50):
-            self.add_widget(NoteButton(context_menu=self.context_menu, text='Note ' + str(i+1), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+            self.add_widget(NoteButton(context_menu=self.context_menu, note_view=self, text='Note ' + str(i+1), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+
+
+    '''
+        This function handles when a note has been activated
+    '''
+    def activate_note(self, note):
+
+        if self.active_note != None:
+
+            self.active_note.background_color = (1, 1, 1, 1) # Background color of note
+
+        note.background_color  = (1, 1, 1, 0.5) # Background color when selected
+        self.active_note = note
+
 
 '''
     This will be used to edit notes

@@ -27,7 +27,34 @@ import os
 # Markdown to restructuredText
 from m2r import convert
 
+# Used for natural sorting
 import re 
+
+
+'''
+    TODO:
+
+        - Fix images/attachments relative paths, that can be done when converting Markdown -> reStructuredText
+        - Add option to export to pdf
+        - Add rain sound
+        - Add git
+        - Finish contextual menu options
+
+            (Tree context menu)
+            - Rename folder
+            - Create folder
+            - Create note
+            - Delete folder
+            - Move folder
+            - Export folder to pdf
+
+            (Note context menu)
+            - Rename note
+            - Delete note
+            - Create note
+            - Export note to pdf
+'''
+
 
 def sorted_nicely(l): 
     """ Sort the given iterable in the way that humans expect.""" 

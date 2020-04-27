@@ -20,6 +20,10 @@ from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.uix.rst import RstDocument
 
+# Filesystem
+import os
+
+# Markdown to restructuredText
 from m2r import convert
 
 '''
@@ -119,6 +123,16 @@ class NoteViewContextMenu(Popup):
             print("Delete note", self.current_note.text)
 
 '''
+    This represents a folder on the treeview
+'''
+class FolderLabel(TreeViewLabel):
+
+    path = ''
+
+    def __init__(self, path='', **kwargs):
+        super(FolderLabel, self).__init__(**kwargs)
+
+'''
     This is a custom Tree View to view the folders
 '''
 class FolderTreeView(TreeView):
@@ -129,22 +143,49 @@ class FolderTreeView(TreeView):
         self.hide_root=True
         self.bind(minimum_height = self.setter('height'))
 
+        # Traverse the db directory
+        hobbes_folder = os.path.dirname(os.path.abspath(__file__))
+        hobbes_db     = os.path.join(hobbes_folder, 'db')
+
+        added = []
+
+        for root, dirs, files in os.walk(hobbes_db):
+
+            level = root.replace(hobbes_db, '').count(os.sep)
+
+            # Ignore the db folder
+            if root == hobbes_db:
+
+                continue
+
+            # Add the rest of dolders recursively
+            if level == 1:
+
+                added.append(self.add_node(FolderLabel(text=os.path.basename(root), path=root)))
+            else:
+
+                added.append(self.add_node(FolderLabel(text=os.path.basename(root), path=root), added[level-2]))
+
+
+
+#            for file in files:
+#                if file.endswith(".txt"):
+#                     print(os.path.join(root, file))
+
         # Tree test
-        n1 = self.add_node(TreeViewLabel(text='Folder 1'))
+        n1 = self.add_node(FolderLabel(text='Folder 1'))
 
         for i in range(50):
 
-            self.add_node(TreeViewLabel(text='Subfolder ' + str(i+1)), n1)
+            self.add_node(FolderLabel(text='Subfolder ' + str(i+1)), n1)
  
-        n2 = self.add_node(TreeViewLabel(text='Folder 2'))
-        self.add_node(TreeViewLabel(text='SubItem 5'), n2) 
+        n2 = self.add_node(FolderLabel(text='Folder 2'))
+        self.add_node(FolderLabel(text='SubItem 5'), n2) 
 
         # Context menu
         self.context_menu = FolderTreeViewContextMenu(size_hint=(.2, .2))
 
     def custom_event_handler(self, touch):
-
-        print("On tree")
 
         active_node = self.get_node_at_pos((touch.x, touch.y))
         

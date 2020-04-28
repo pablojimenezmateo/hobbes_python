@@ -48,20 +48,13 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 
         - Fix images/attachments relative paths, that can be done when converting Markdown -> reStructuredText
         - Add option to export to pdf
-        - Add rain sound
         - Add git
         - Finish contextual menu options
 
             (Tree context menu)
             - Rename folder
-            - Create folder
-            - Create root folder (new git)
-            - Create note
-            - Delete folder
-            - Move folder
-            - Export folder to pdf
 
-            (Note context menu)
+            (Note context menu) -> Started working on this
             - Rename note
             - Delete note
             - Create note
@@ -139,6 +132,7 @@ class ConfirmPopup(Popup):
 
         self.add_widget(layout_top)
 
+        # If the cancel button is pressed, just close the popup
         self.confirm_button.bind(on_release=self.my_callback)
         self.cancel_button.bind(on_release=self.dismiss)
 
@@ -202,7 +196,7 @@ class FolderTreeViewContextMenu(Popup):
         self.open()
 
     '''
-        Functions that create  info popups for the actions
+        Functions that create textinput popups for the actions
     '''
     def create_note_popup(self, *l):
 
@@ -287,14 +281,17 @@ class NoteViewContextMenu(Popup):
         rename_note_button   = Button(text="Rename note")
         move_note_button     = Button(text="Move note")
         delete_note_button   = Button(text="Delete note")
+        export_note_button   = Button(text="Export note to PDF")
         self.context_menu.add_widget(rename_note_button)
         self.context_menu.add_widget(move_note_button)
         self.context_menu.add_widget(delete_note_button)
+        self.context_menu.add_widget(export_note_button)
 
         # Bind the buttons to functions
-        rename_note_button.bind(on_release = self.rename_note) 
-        move_note_button.bind(on_release = self.move_note)
-        delete_note_button.bind(on_release = self.delete_note)
+        rename_note_button.bind(on_release = self.rename_note_popup) 
+        move_note_button.bind(on_release = self.move_note_popup)
+        delete_note_button.bind(on_release = self.delete_note_popup)
+        export_note_button.bind(on_release = self.export_note_popup)
 
         self.content = self.context_menu
 
@@ -304,6 +301,14 @@ class NoteViewContextMenu(Popup):
 
         self.current_note = note
         self.open()
+
+    def rename_note_popup(self, *l):
+
+        if self.current_note != None:
+            self.dismiss()
+
+            info = TextinputPopup(title="Rename note", message="Insert new note name", callback=self.create_folder, size_hint=(.2, .2))
+            info.open()
 
     def rename_note(self, *l):
 

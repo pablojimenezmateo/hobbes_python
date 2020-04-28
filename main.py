@@ -20,6 +20,7 @@ from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.uix.rst import RstDocument
 from kivy.clock import Clock
+from kivy.uix.slider import Slider
 
 # Filesystem
 import os
@@ -29,6 +30,10 @@ from m2r import convert
 
 # Used for natural sorting
 import re 
+
+# For audio playing
+from pygame import mixer
+
 
 '''
     TODO:
@@ -426,6 +431,33 @@ class NoteTextPanel(BoxLayout):
 
             self.save_note()
 
+class MusicSlider(Slider):
+
+    def __init__(self, **kwargs):
+        super(MusicSlider, self).__init__(**kwargs)
+
+        # Audio
+        mixer.init()
+        mixer.set_num_channels(1)
+        self.rain = mixer.Sound("media/audio/rain.ogg")
+
+    def on_touch_up(self, touch):
+
+        if self.value > 0:
+
+            # If the sound is not playing, start it
+            if not mixer.get_busy():
+
+                self.rain.play(loops=-1)
+
+            self.rain.set_volume(self.value)
+
+        else:
+
+            self.rain.fadeout(2000)    
+
+        return True
+
 '''
     This is the Layout of the main screen of the application
 '''
@@ -446,16 +478,20 @@ class MainScreen(BoxLayout):
         self.notes_view_scroll.add_widget(self.notes_view, 0)
 
         # Folders view
-        self.folder_tree_view_scroll = ScrollView(size_hint=(.2, 1))
+        self.folder_tree_view_scroll = ScrollView(size_hint=(1, 1))
         self.folder_tree_view = FolderTreeView(size_hint_y=None, notes_view=self.notes_view)
         self.folder_tree_view_scroll.add_widget(self.folder_tree_view, 1)
 
-        self.add_widget(self.folder_tree_view_scroll)
+        # Add the tiny slider for the rain
+        audio_layout = BoxLayout(orientation='vertical', size_hint=(.2, 1))
+        audio_layout.add_widget(self.folder_tree_view_scroll)
+        self.slider = MusicSlider(min=0, max=1, value=0, step=0.05, cursor_size=(15, 15), cursor_image='media/images/slider.png', background_width='18sp', size_hint=(1, 0.1))
+        audio_layout.add_widget(self.slider)
+
+
+        self.add_widget(audio_layout)
         self.add_widget(self.notes_view_scroll)
         self.add_widget(self.note_text_input)
-
-        # Listen for keyboard events
-        Window.bind(on_keyboard=self.on_keyboard)
 
     # This method will be in charge of all the input actions
     def on_touch_down(self, touch):

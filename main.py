@@ -68,12 +68,90 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
             - Export note to pdf
 '''
 
-
+""" Sort the given iterable in the way that humans expect.""" 
 def sorted_nicely(l): 
-    """ Sort the given iterable in the way that humans expect.""" 
     convert = lambda text: int(text) if text.isdigit() else text 
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
     return sorted(l, key=alphanum_key)
+
+
+'''
+    Generic info popup
+'''
+
+class InfoPopup(Popup):
+
+    def __init__(self, message, **kwargs):
+
+        super(InfoPopup, self).__init__(**kwargs)
+
+        self.add_widget(Label(text=message))
+
+'''
+    Generic textinput popup
+'''
+class TextinputPopup(Popup):
+
+    def __init__(self, message, callback, **kwargs):
+
+        super(TextinputPopup, self).__init__(**kwargs)
+
+        layout = BoxLayout(orientation='vertical', size_hint=(1, 1))
+        layout.add_widget(Label(text=message, size_hint=(1, .5)), 1)
+        self.textinput = TextInput(text='', multiline=False, size_hint=(1, .5))
+
+        layout.add_widget(self.textinput, 0)
+
+        self.add_widget(layout)
+
+        self.textinput.bind(on_text_validate=self.my_callback)
+
+        self.callback = callback
+
+    def my_callback(self, textinput):
+
+        self.callback(self, textinput.text)
+
+    # Set the focus when opened
+    def on_open(self):
+
+        self.textinput.focus = True
+
+'''
+    Generic confirmation dialog
+'''
+class ConfirmPopup(Popup):
+
+    def __init__(self, message, callback, **kwargs):
+
+        super(ConfirmPopup, self).__init__(**kwargs)
+
+        layout_top = BoxLayout(orientation='vertical', size_hint=(1, .5))
+        layout_top.add_widget(Label(text=message, size_hint=(1, .5)), 1)
+
+        layout_bottom = BoxLayout(orientation='horizontal', size_hint=(1, .5))
+
+        self.confirm_button = Button(text='Confirm', size_hint=(.5, 1))
+        layout_bottom.add_widget(self.confirm_button)
+        self.cancel_button = Button(text='Cancel', size_hint=(.5, 1))
+        layout_bottom.add_widget(self.cancel_button)
+        layout_top.add_widget(layout_bottom)
+
+        self.add_widget(layout_top)
+
+        self.confirm_button.bind(on_release=self.my_callback)
+        self.cancel_button.bind(on_release=self.dismiss)
+
+        self.callback = callback
+
+    def my_callback(self, l):
+
+        print("confirm")
+
+    # Set the focus when opened
+    def on_open(self):
+
+        self.confirm_button.focus = True
 
 '''
     Contextual menu for the folder view
@@ -91,41 +169,107 @@ class FolderTreeViewContextMenu(Popup):
         new_note_button   = Button(text="New note")
         new_folder_button = Button(text="New folder")
         new_root_folder_button = Button(text="New root folder")
+
+        # Special dialogues are needed for the following options
+        move_folder_button     = Button(text="Move folder")
+        export_folder_button   = Button(text="Export folder to PDF")
+        delete_folder_button   = Button(text="Delete folder")
+
         self.context_menu.add_widget(new_note_button)
         self.context_menu.add_widget(new_folder_button)
         self.context_menu.add_widget(new_root_folder_button)
+        self.context_menu.add_widget(move_folder_button)
+        self.context_menu.add_widget(export_folder_button)
+        self.context_menu.add_widget(delete_folder_button)
 
         # Bind the buttons to functions
-        new_note_button.bind(on_release = self.create_note) 
-        new_folder_button.bind(on_release = self.create_folder)
-        new_root_folder_button.bind(on_release = self.create_root_folder)
+        new_note_button.bind(on_release = self.create_note_popup) 
+        new_folder_button.bind(on_release = self.create_folder_popup)
+        new_root_folder_button.bind(on_release = self.create_root_folder_popup)
+
+        move_folder_button.bind(on_release = self.move_folder_popup)
+        export_folder_button.bind(on_release = self.export_folder_popup)
+        delete_folder_button.bind(on_release = self.delete_folder_popup)
 
         self.content = self.context_menu
 
         self.current_folder = None
 
+    # When the menu is opened the current folder is saved
     def menu_opened(self, folder):
 
         self.current_folder = folder
         self.open()
 
-
-    def create_note(self, *l):
-
-        if self.current_folder != None:
-
-            print("Creating note on folder ", self.current_folder.text)
-
-    def create_folder(self, *l):
+    '''
+        Functions that create  info popups for the actions
+    '''
+    def create_note_popup(self, *l):
 
         if self.current_folder != None:
 
-            print("Creating folder on folder ", self.current_folder.text)
+            self.dismiss()
+
+            info = TextinputPopup(title="New note", message="Insert note name", callback=self.create_note, size_hint=(.2, .2))
+            info.open()
+
+    def create_folder_popup(self, *l):
+
+        if self.current_folder != None:
+            self.dismiss()
+
+            info = TextinputPopup(title="New folder", message="Insert folder name", callback=self.create_folder, size_hint=(.2, .2))
+            info.open()
+
+    def create_root_folder_popup(self, *l):
+
+        self.dismiss()
+        info = TextinputPopup(title="New root folder", message="Insert root folder name", callback=self.create_root_folder, size_hint=(.3, .2))
+        info.open()
+
+    '''
+        Functions that require custom dialogues
+    '''
+    def move_folder_popup(self, *l):
+
+        self.dismiss()
+
+        # If the user clicks on another folder, the folder moves there
+
+    def export_folder_popup(self, *l):
+
+        self.dismiss()
+
+        # Open filesystem to get new path
+
+        # Recursively convert notes to PDF
+
+    def delete_folder_popup(self, *l):
+
+        self.dismiss()
+
+        # Need confirmation
 
 
-    def create_root_folder(self, *l):
+    '''
+        Functions that actually do things
+    '''
 
-        print("I need to create a root folder")
+    def create_note(self, popup, text):
+
+        print("Creating note", text, " on folder ", self.current_folder.text)
+        popup.dismiss()
+
+    def create_folder(self, popup, text):
+
+        print("Creating folder", text, " on folder ", self.current_folder.text)
+        popup.dismiss()
+
+
+    def create_root_folder(self, popup, text):
+
+        print("Creating root folder", text)
+        popup.dismiss()
 
 '''
     Contextual menu for the note view
@@ -534,21 +678,21 @@ class MainScreen(BoxLayout):
         GIT TEST: Better do this in a new thread
         '''
 
-        # Check if the .git folder exist on the repo
-        repo = Repo(os.path.join(hobbes_db, 'Work'))
+        ## Check if the .git folder exist on the repo
+        #repo = Repo(os.path.join(hobbes_db, 'Work'))
+        #origin = repo.remote(name='origin')
 
-        # Pull any changes
-        g.pull()
+        ## Pull any changes
+        #origin.pull()
 
-        # Add new versions
-        repo.git.add('--all')
-        date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        device_name = socket.gethostname()
-        repo.index.commit('Sync: ' + date + ' Device: ' + device_name)
-        origin = repo.remote(name='origin')
-
-        # Push everything
-        origin.push()
+        ## Add new changes
+        #repo.git.add('--all')
+        #date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        #device_name = socket.gethostname()
+        #repo.index.commit('Sync: ' + date + ' Device: ' + device_name)
+        #
+        ## Push everything
+        #origin.push()
 
 
     # This method will be in charge of all the input actions
@@ -581,6 +725,17 @@ class MainScreen(BoxLayout):
         elif 'ctrl' in modifier and codepoint == 's':
 
             self.note_text_input.save_note()
+
+        elif 'ctrl' in modifier and codepoint == 't':
+
+            info = ConfirmPopup(title="Delete", message="Are you sure you want to delete that?", callback=self.test)
+            info.open()
+
+
+    def test(self, textinput):
+
+        print("Just a callback, don't mind me!, I got:", textinput.text)
+
 
 class HobbesApp(App):
 

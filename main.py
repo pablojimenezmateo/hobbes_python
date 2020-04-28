@@ -22,6 +22,11 @@ from kivy.uix.rst import RstDocument
 from kivy.clock import Clock
 from kivy.uix.slider import Slider
 
+# For online sync
+from git import Repo
+import datetime
+import socket
+
 # Filesystem
 import os
 
@@ -34,6 +39,9 @@ import re
 # For audio playing
 from pygame import mixer
 
+# Global definitions
+# This is the path where notes will be stored and read from
+hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 
 '''
     TODO:
@@ -47,6 +55,7 @@ from pygame import mixer
             (Tree context menu)
             - Rename folder
             - Create folder
+            - Create root folder (new git)
             - Create note
             - Delete folder
             - Move folder
@@ -81,12 +90,15 @@ class FolderTreeViewContextMenu(Popup):
         # Create the options
         new_note_button   = Button(text="New note")
         new_folder_button = Button(text="New folder")
+        new_root_folder_button = Button(text="New root folder")
         self.context_menu.add_widget(new_note_button)
         self.context_menu.add_widget(new_folder_button)
+        self.context_menu.add_widget(new_root_folder_button)
 
         # Bind the buttons to functions
         new_note_button.bind(on_release = self.create_note) 
         new_folder_button.bind(on_release = self.create_folder)
+        new_root_folder_button.bind(on_release = self.create_root_folder)
 
         self.content = self.context_menu
 
@@ -109,6 +121,11 @@ class FolderTreeViewContextMenu(Popup):
         if self.current_folder != None:
 
             print("Creating folder on folder ", self.current_folder.text)
+
+
+    def create_root_folder(self, *l):
+
+        print("I need to create a root folder")
 
 '''
     Contextual menu for the note view
@@ -178,12 +195,49 @@ class NoteViewContextMenu(Popup):
 '''
 class FolderLabel(TreeViewLabel):
 
+    # I'm storing here the filesystem path of the folder
     path = ''
 
     def __init__(self, path='', **kwargs):
         super(FolderLabel, self).__init__(**kwargs)
 
         self.path = path
+
+'''
+    This function traverses a directory and adds the folders as children to
+    the given tree
+'''
+def populate_tree(tree, path):
+
+    added = []
+
+    # Helper functions used to sort
+    convert = lambda text: int(text) if text.isdigit() else text 
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+
+    for root, dirs, files in os.walk(path):
+
+        # Remove directories starting by .
+        dirs[:] = [d for d in dirs if not d[0] == '.']
+
+        # Alfabetical order
+        dirs.sort(key=alphanum_key)
+
+        level = root.replace(path, '').count(os.sep)
+
+        # Ignore the same folder
+
+        if root == path:
+            continue
+
+        # Add the rest of folders recursively
+        if level == 1:
+
+            added = []
+            added.append(tree.add_node(FolderLabel(text=os.path.basename(root), path=root)))
+        else:
+
+            added.append(tree.add_node(FolderLabel(text=os.path.basename(root), path=root), added[level-2]))
 
 '''
     This is a custom Tree View to view the folders
@@ -198,36 +252,7 @@ class FolderTreeView(TreeView):
 
         self.notes_view = notes_view
 
-        # Traverse the db directory
-        hobbes_folder = os.path.dirname(os.path.abspath(__file__))
-        hobbes_db     = os.path.join(hobbes_folder, 'db')
-
-        added = []
-
-        # Helper functions used to sort
-        convert = lambda text: int(text) if text.isdigit() else text 
-        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
-
-        for root, dirs, files in os.walk(hobbes_db):
-
-            # Alfabetical order
-            dirs.sort(key=alphanum_key)
-
-            level = root.replace(hobbes_db, '').count(os.sep)
-
-            # Ignore the db folder and the attachments folder
-            if root == hobbes_db or os.path.basename(root) == '.attachments_db':
-
-                continue
-
-            # Add the rest of folders recursively
-            if level == 1:
-
-                added = []
-                added.append(self.add_node(FolderLabel(text=os.path.basename(root), path=root)))
-            else:
-
-                added.append(self.add_node(FolderLabel(text=os.path.basename(root), path=root), added[level-2]))
+        populate_tree(self, hobbes_db)
 
         # Context menu
         self.context_menu = FolderTreeViewContextMenu(size_hint=(.2, .2))
@@ -235,6 +260,7 @@ class FolderTreeView(TreeView):
     def custom_event_handler(self, touch):
 
         if touch.button != 'scrolldown' and touch.button != 'scrollup':
+
             active_node = self.get_node_at_pos((touch.x, touch.y))
             
             if active_node != None:
@@ -244,7 +270,14 @@ class FolderTreeView(TreeView):
                 if touch.button == 'right' or touch.is_double_tap:
 
                     self.context_menu.menu_opened(active_node)
+
                     return True
+
+            # There is no node under the cursor
+            else:
+
+                print("Not a leaf")
+
 '''
     Each of the notes is represented by one button
 '''
@@ -488,16 +521,43 @@ class MainScreen(BoxLayout):
         self.slider = MusicSlider(min=0, max=1, value=0, step=0.05, cursor_size=(15, 15), cursor_image='media/images/slider.png', background_width='18sp', size_hint=(1, 0.1))
         audio_layout.add_widget(self.slider)
 
-
+        # Add the audio layout
         self.add_widget(audio_layout)
         self.add_widget(self.notes_view_scroll)
         self.add_widget(self.note_text_input)
+
+        # Pay attention to keyboard events
+        Window.bind(on_key_down=self.on_keyboard)
+
+
+        '''
+        GIT TEST: Better do this in a new thread
+        '''
+
+        # Check if the .git folder exist on the repo
+        repo = Repo(os.path.join(hobbes_db, 'Work'))
+
+        # Pull any changes
+        g.pull()
+
+        # Add new versions
+        repo.git.add('--all')
+        date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        device_name = socket.gethostname()
+        repo.index.commit('Sync: ' + date + ' Device: ' + device_name)
+        origin = repo.remote(name='origin')
+
+        # Push everything
+        origin.push()
+
 
     # This method will be in charge of all the input actions
     def on_touch_down(self, touch):
 
         # Handle TreeView touch
         if self.folder_tree_view_scroll.collide_point(touch.x, touch.y):
+
+            print("On tree")
 
             # Save the touch since we are making coordinates transform
             touch.push()

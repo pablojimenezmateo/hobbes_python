@@ -140,7 +140,7 @@ class ConfirmPopup(Popup):
 
     def my_callback(self, l):
 
-        print("confirm")
+        self.callback(self)
 
     # Set the focus when opened
     def on_open(self):
@@ -162,6 +162,7 @@ class FolderTreeViewContextMenu(Popup):
         # Create the options
         new_note_button   = Button(text="New note")
         new_folder_button = Button(text="New folder")
+        rename_folder_button = Button(text="Rename folder")
         new_root_folder_button = Button(text="New root folder")
 
         # Special dialogues are needed for the following options
@@ -171,6 +172,7 @@ class FolderTreeViewContextMenu(Popup):
 
         self.context_menu.add_widget(new_note_button)
         self.context_menu.add_widget(new_folder_button)
+        self.context_menu.add_widget(rename_folder_button)
         self.context_menu.add_widget(new_root_folder_button)
         self.context_menu.add_widget(move_folder_button)
         self.context_menu.add_widget(export_folder_button)
@@ -179,6 +181,7 @@ class FolderTreeViewContextMenu(Popup):
         # Bind the buttons to functions
         new_note_button.bind(on_release = self.create_note_popup) 
         new_folder_button.bind(on_release = self.create_folder_popup)
+        rename_folder_button.bind(on_release = self.rename_folder_popup)
         new_root_folder_button.bind(on_release = self.create_root_folder_popup)
 
         move_folder_button.bind(on_release = self.move_folder_popup)
@@ -189,7 +192,7 @@ class FolderTreeViewContextMenu(Popup):
 
         self.current_folder = None
 
-    # When the menu is opened the current folder is saved
+    # When the menu is opened the current folder pointer is stored
     def menu_opened(self, folder):
 
         self.current_folder = folder
@@ -213,6 +216,14 @@ class FolderTreeViewContextMenu(Popup):
             self.dismiss()
 
             info = TextinputPopup(title="New folder", message="Insert folder name", callback=self.create_folder, size_hint=(.2, .2))
+            info.open()
+
+    def rename_folder_popup(self, *l):
+
+        if self.current_folder != None:
+            self.dismiss()
+
+            info = TextinputPopup(title="Rename folder", message="Insert folder name for folder '%s'" % self.current_folder.text, callback=self.rename_folder, size_hint=(.2, .2))
             info.open()
 
     def create_root_folder_popup(self, *l):
@@ -243,6 +254,8 @@ class FolderTreeViewContextMenu(Popup):
         self.dismiss()
 
         # Need confirmation
+        confirm = ConfirmPopup(title="Delete folder", message="Are you sure you want to delete folder '%s'?" % self.current_folder.text, callback=self.delete_folder, size_hint=(.2, .2))
+        confirm.open()
 
 
     '''
@@ -264,6 +277,32 @@ class FolderTreeViewContextMenu(Popup):
 
         print("Creating root folder", text)
         popup.dismiss()
+
+    def rename_folder(self, popup, text):
+
+        print("Renaming folder %s to %s" % (self.current_folder.text, text))
+        popup.dismiss()
+
+    def move_folder(self, popup):
+
+        if self.current_folder != None:
+
+            print("Moving folder", self.current_folder.text)
+            popup.dismiss()
+
+    def export_folder(self, popup):
+
+        if self.current_folder != None:
+
+            print("Exporting folder", self.current_folder.text)
+            popup.dismiss()
+
+    def delete_folder(self, popup):
+
+        if self.current_folder != None:
+
+            print("Deleting folder", self.current_folder.text)
+            popup.dismiss()
 
 '''
     Contextual menu for the note view
@@ -302,13 +341,36 @@ class NoteViewContextMenu(Popup):
         self.current_note = note
         self.open()
 
+    '''
+        Popup functions
+    '''
     def rename_note_popup(self, *l):
 
         if self.current_note != None:
             self.dismiss()
 
-            info = TextinputPopup(title="Rename note", message="Insert new note name", callback=self.create_folder, size_hint=(.2, .2))
+            info = TextinputPopup(title="Rename note", message="Insert folder name for note '%s'" % self.current_note.text, callback=self.rename_note, size_hint=(.2, .2))
             info.open()
+
+
+    def move_note_popup(self, *l):
+
+        if self.current_note != None:
+            self.dismiss()
+
+    def delete_note_popup(self, *l):
+
+        if self.current_note != None:
+            self.dismiss()
+
+            # Need confirmation
+            confirm = ConfirmPopup(title="Delete note", message="Are you sure you want to delete note '%s'?" % self.current_note.text, callback=self.delete_note, size_hint=(.2, .2))
+            confirm.open()
+
+    def export_note_popup(self, *l):
+
+        if self.current_note != None:
+            self.dismiss()
 
     def rename_note(self, *l):
 
@@ -328,9 +390,9 @@ class NoteViewContextMenu(Popup):
 
             print("Delete note", self.current_note.text)
 
-    def import_note_to_pdf(self, path):
+    def import_note_to_pdf(self, in_path, out_path):
 
-        # import Markdown to pdf, it is too slow to de everytime
+        # This imports are expensive, that is why they are not loaded on start
         from markdown import markdown
         from weasyprint import HTML
 
@@ -730,16 +792,6 @@ class MainScreen(BoxLayout):
         elif 'ctrl' in modifier and codepoint == 's':
 
             self.note_text_input.save_note()
-
-        elif 'ctrl' in modifier and codepoint == 't':
-
-            info = ConfirmPopup(title="Delete", message="Are you sure you want to delete that?", callback=self.test)
-            info.open()
-
-
-    def test(self, textinput):
-
-        print("Just a callback, don't mind me!, I got:", textinput.text)
 
 
 class HobbesApp(App):

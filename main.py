@@ -49,16 +49,8 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
         - Fix images/attachments relative paths, that can be done when converting Markdown -> reStructuredText
         - Add option to export to pdf
         - Add git
-        - Finish contextual menu options
+        - Implement contextual menu options
 
-            (Tree context menu)
-            - Rename folder
-
-            (Note context menu) -> Started working on this
-            - Rename note
-            - Delete note
-            - Create note
-            - Export note to pdf
 '''
 
 """ Sort the given iterable in the way that humans expect.""" 

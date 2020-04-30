@@ -23,6 +23,23 @@
     size_hint: (1,None)
     size: (Window.width, Window.height)
 
+<SearchButton>:
+
+    background_normal: ''
+    background_down: ''
+    size_hint: (1,None)
+    size: (0, 30)
+    background_color: 1, 1, 1, 1
+
+    on_press: print("ouch! More gently please")
+
+    canvas.after:
+        Color:
+            rgba: 0, 0, 0, 0.5
+        Line:
+            width: 1
+            rectangle: self.x, self.y, self.width, 1
+
 <NoteButton>
 
     background_normal: ''

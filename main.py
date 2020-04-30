@@ -152,6 +152,20 @@ def incremental_index(db_path, dirname):
         writer.commit()
 
 '''
+    SearchButton
+'''
+class SearchButton(Button):
+
+    def __init__(self, **kwargs):
+        super(SearchButton, self).__init__(**kwargs)
+
+
+    def on_press(self):
+
+        print("Search result ", self.text)
+
+
+'''
     Search popup
 '''
 class SearchPopup(ModalView):
@@ -160,28 +174,37 @@ class SearchPopup(ModalView):
 
         super(SearchPopup, self).__init__(**kwargs)
 
+        # Remove background
         self.background = 'media/images/transparent.png'
         self.background_color = (0, 0, 0, 0)
 
+        # To check if it is active
+        self.active = False
+        self.bind(on_open=self.toggle_active)
+        self.bind(on_dismiss=self.toggle_active)
+
+        # Put it at the top
         self.pos_hint = {'top': 0.9}
 
-        self.layout = BoxLayout(orientation='vertical', size_hint=(1, None))
-
-        self.layout.bind(minimum_height = self.setter('height'))
-
-
+        # The buttons will be added to a BoxLayout
+        self.layout = BoxLayout(orientation='vertical', size_hint=(1, 1))
         self.textinput = TextInput(text='', multiline=False, size_hint=(1, None), size=(0, 30))
         self.layout.add_widget(self.textinput)
 
         self.add_widget(self.layout)
 
+        # Search when enter is pressed
         self.textinput.bind(on_text_validate=self.do_search)
 
         self.buttons = []
 
+    def toggle_active(self, args):
+
+        self.active = not self.active
 
     def clear_all(self):
 
+        self.dismiss()
         self.textinput.text=''
         self.clear_results()
 
@@ -191,13 +214,11 @@ class SearchPopup(ModalView):
 
             self.layout.remove_widget(btn)
 
+        self.buttons = []
+
     def do_search(self, textinput):
 
         self.clear_results()
-
-        print("Searching")
-
-        print(self.layout.size)
 
         # Create the searcher
         ix = index.open_dir(os.path.join(hobbes_db, '.text_index'))
@@ -207,24 +228,31 @@ class SearchPopup(ModalView):
             parser = MultifieldParser(["title", "content"], schema=ix.schema)
 
             query = parser.parse(textinput.text)
-            results = searcher.search(query, terms=True)
+            results = searcher.search(query, terms=True, limit=None)
 
             for hit in results:
 
-                btn = Button(text=hit['title'], size_hint=(1, None), size=(0, 30))
+                beautiful_path = hit['path'].replace(hobbes_db, '')
+                beautiful_path = '>'.join(beautiful_path.split(os.sep)[1:-1]) + '>' + hit['title']
+
+                btn = SearchButton(text=beautiful_path, color=(0, 0, 0, 1))
                 self.layout.add_widget(btn)
 
                 self.buttons.append(btn)
 
-                print(hit)
-                print(hit.matched_terms())
+            # We move the layout downward, since appending buttons makes it move upward
+            self.layout.pos = (self.layout.x, self.layout.y - 30 * len(results))
 
-        #self.pos_hint = {'top': 0.1}
+    def on_touch_down(self, touch):
 
-        # Keep the focus on the textinput
-        self.textinput.focus = True
+        for btn in self.buttons:
 
-        print(self.layout.size)
+            if btn.collide_point(touch.x, touch.y) and touch.button == 'left':
+
+                btn.on_press()
+                break
+
+        return super(SearchPopup, self).on_touch_down(touch)
 
 
     # Set the focus when opened
@@ -975,10 +1003,14 @@ class MainScreen(BoxLayout):
 
         elif 'ctrl' in modifier and codepoint == 'g':
 
-            #s = SearchPopup(size_hint=(.8, None))
-            #s.open()
-            self.search_popup.clear_all()
-            self.search_popup.open()
+            # This opens and closes the search
+            if self.search_popup.active:
+
+                self.search_popup.dismiss()
+            else:
+
+                self.search_popup.clear_all()
+                self.search_popup.open()
 
 
 class HobbesApp(App):

@@ -21,6 +21,8 @@ from kivy.uix.widget import Widget
 from kivy.uix.rst import RstDocument
 from kivy.clock import Clock
 from kivy.uix.slider import Slider
+from kivy.uix.dropdown import DropDown
+from kivy.uix.modalview import ModalView
 
 # For online sync
 from git import Repo
@@ -42,6 +44,7 @@ from pygame import mixer
 # For text indexing
 from whoosh import index
 from whoosh.fields import Schema, ID, TEXT
+from whoosh.qparser import MultifieldParser
 
 # Global definitions
 # This is the path where notes will be stored and read from
@@ -54,9 +57,7 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
         - Add option to export to pdf
         - Add git
         - Implement contextual menu options
-
 '''
-
 
 '''
     From the Whoosh docs, incremental indexing of the files
@@ -68,11 +69,9 @@ def index_my_docs(db_path, dirname, clean=False):
 
         os.mkdir(os.path.join(db_path, dirname))
 
-
     if clean:
 
         clean_index(db_path, dirname)
-
     else:
 
         incremental_index(db_path, dirname)
@@ -151,6 +150,88 @@ def incremental_index(db_path, dirname):
                 add_doc(writer, path)
 
         writer.commit()
+
+'''
+    Search popup
+'''
+class SearchPopup(ModalView):
+
+    def __init__(self, **kwargs):
+
+        super(SearchPopup, self).__init__(**kwargs)
+
+        self.background = 'media/images/transparent.png'
+        self.background_color = (0, 0, 0, 0)
+
+        self.pos_hint = {'top': 0.9}
+
+        self.layout = BoxLayout(orientation='vertical', size_hint=(1, None))
+
+        self.layout.bind(minimum_height = self.setter('height'))
+
+
+        self.textinput = TextInput(text='', multiline=False, size_hint=(1, None), size=(0, 30))
+        self.layout.add_widget(self.textinput)
+
+        self.add_widget(self.layout)
+
+        self.textinput.bind(on_text_validate=self.do_search)
+
+        self.buttons = []
+
+
+    def clear_all(self):
+
+        self.textinput.text=''
+        self.clear_results()
+
+    def clear_results(self):
+
+        for btn in self.buttons:
+
+            self.layout.remove_widget(btn)
+
+    def do_search(self, textinput):
+
+        self.clear_results()
+
+        print("Searching")
+
+        print(self.layout.size)
+
+        # Create the searcher
+        ix = index.open_dir(os.path.join(hobbes_db, '.text_index'))
+
+        with ix.searcher() as searcher:
+
+            parser = MultifieldParser(["title", "content"], schema=ix.schema)
+
+            query = parser.parse(textinput.text)
+            results = searcher.search(query, terms=True)
+
+            for hit in results:
+
+                btn = Button(text=hit['title'], size_hint=(1, None), size=(0, 30))
+                self.layout.add_widget(btn)
+
+                self.buttons.append(btn)
+
+                print(hit)
+                print(hit.matched_terms())
+
+        #self.pos_hint = {'top': 0.1}
+
+        # Keep the focus on the textinput
+        self.textinput.focus = True
+
+        print(self.layout.size)
+
+
+    # Set the focus when opened
+    def on_open(self):
+
+        self.textinput.focus = True
+
 
 """ Sort the given iterable in the way that humans expect.""" 
 def sorted_nicely(l): 
@@ -831,6 +912,9 @@ class MainScreen(BoxLayout):
         # Pay attention to keyboard events
         Window.bind(on_key_down=self.on_keyboard)
 
+        # Search popup
+        self.search_popup = SearchPopup(size_hint=(None, None), size=(400, 0))
+
 
         '''
         GIT TEST: Better do this in a new thread
@@ -855,7 +939,7 @@ class MainScreen(BoxLayout):
         '''
             Indexing test
         '''
-        index_my_docs(os.path.join(hobbes_db, 'Work'), '.text_index', True)
+        index_my_docs(hobbes_db, '.text_index', True)
 
 
     # This method will be in charge of all the input actions
@@ -891,22 +975,11 @@ class MainScreen(BoxLayout):
 
         elif 'ctrl' in modifier and codepoint == 'g':
 
-            # Create the searcher
-            from whoosh.qparser import MultifieldParser
+            #s = SearchPopup(size_hint=(.8, None))
+            #s.open()
+            self.search_popup.clear_all()
+            self.search_popup.open()
 
-            ix = index.open_dir(os.path.join(hobbes_db, 'Work/.text_index'))
-
-            with ix.searcher() as searcher:
-
-                parser = MultifieldParser(["title", "content"], schema=ix.schema)
-
-                query = parser.parse(u"rando*")
-                results = searcher.search(query, terms=True)
-
-                for hit in results:
-
-                    print(hit)
-                    print(hit.matched_terms())
 
 class HobbesApp(App):
 

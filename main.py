@@ -43,8 +43,9 @@ from pygame import mixer
 
 # For text indexing
 from whoosh import index
-from whoosh.fields import Schema, ID, TEXT
+from whoosh.fields import Schema, ID, TEXT, DATETIME
 from whoosh.qparser import MultifieldParser
+import datetime
 
 # Global definitions
 # This is the path where notes will be stored and read from
@@ -53,7 +54,7 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 '''
     TODO:
 
-        - Fix images/attachments relative paths, that can be done when converting Markdown -> reStructuredText
+        - Fix images/attachments relative paths, that can be done when converting Markdown -> reStructuredText, just append the hobbes_db path
         - Add option to export to pdf
         - Add git
         - Implement contextual menu options
@@ -96,7 +97,7 @@ def my_docs(db_path):
 
 def get_schema():
 
-    return Schema(path=ID(unique=True, stored=True), title=TEXT(stored=True), content=TEXT)
+    return Schema(path=ID(unique=True, stored=True), title=TEXT(stored=True), time=DATETIME(stored=True), content=TEXT)
 
 def add_doc(writer, path):
 
@@ -104,7 +105,14 @@ def add_doc(writer, path):
     content = fileobj.read()
     fileobj.close()
     title = os.path.basename(path).split(".")[0]
-    writer.add_document(path=path, content=content.decode("utf-8", "strict"), title=title)
+
+    # The last time the file was modified
+    mtime = os.path.getmtime(path)
+
+    # Convert seconds since epoch to readable timestamp
+    modification_time = datetime.datetime.fromtimestamp(mtime)
+
+    writer.add_document(path=path, content=content.decode("utf-8", "strict"), title=title, time=modification_time)
 
 def incremental_index(db_path, dirname):
 
@@ -133,8 +141,9 @@ def incremental_index(db_path, dirname):
             # was indexed
             indexed_time = fields['time']
             mtime = os.path.getmtime(indexed_path)
+            modification_time = datetime.datetime.fromtimestamp(mtime)
 
-            if mtime > indexed_time:
+            if modification_time > indexed_time:
                 # The file has changed, delete it and add it to the list of
                 # files to reindex
                 writer.delete_by_term('path', indexed_path)
@@ -151,28 +160,40 @@ def incremental_index(db_path, dirname):
 
         writer.commit()
 
+# Reindexes only one file, useful when saving a note
+def reindex_one_note(db_path, dirname, note_path):
+
+    ix = index.open_dir(os.path.join(db_path, dirname))
+
+    with ix.searcher() as searcher:
+
+        writer = ix.writer()
+        writer.delete_by_term('path', note_path)
+        add_doc(writer, note_path)
+
+        writer.commit()
+
 '''
     SearchButton
 '''
 class SearchButton(Button):
 
-    def __init__(self, **kwargs):
+    def __init__(self, path, **kwargs):
         super(SearchButton, self).__init__(**kwargs)
 
-
-    def on_press(self):
-
-        print("Search result ", self.text)
-
+        self.path = path
 
 '''
     Search popup
 '''
 class SearchPopup(ModalView):
 
-    def __init__(self, **kwargs):
+    def __init__(self, folder_tree_view, notes_view, **kwargs):
 
         super(SearchPopup, self).__init__(**kwargs)
+
+        self.folder_tree_view = folder_tree_view
+        self.notes_view = notes_view
 
         # Remove background
         self.background = 'media/images/transparent.png'
@@ -235,7 +256,7 @@ class SearchPopup(ModalView):
                 beautiful_path = hit['path'].replace(hobbes_db, '')
                 beautiful_path = '>'.join(beautiful_path.split(os.sep)[1:-1]) + '>' + hit['title']
 
-                btn = SearchButton(text=beautiful_path, color=(0, 0, 0, 1))
+                btn = SearchButton(text=beautiful_path, path=hit['path'], color=(0, 0, 0, 1))
                 self.layout.add_widget(btn)
 
                 self.buttons.append(btn)
@@ -249,7 +270,33 @@ class SearchPopup(ModalView):
 
             if btn.collide_point(touch.x, touch.y) and touch.button == 'left':
 
-                btn.on_press()
+                tree_node = self.folder_tree_view.path_dictionary[os.path.dirname(btn.path)]
+
+                # Find the tree path until this node
+                traversed_tree = []
+                traversed_tree.append(tree_node)
+                parent_node = tree_node.parent_node
+
+                while parent_node != self.folder_tree_view.root:
+
+                    traversed_tree.insert(0, parent_node)
+                    parent_node = parent_node.parent_node
+
+                # Open the nodes until the selected node
+                for t in traversed_tree:
+
+                    if not t.is_open:
+
+                        self.folder_tree_view.toggle_node(t)
+
+                # And select the node
+                self.folder_tree_view.select_node(tree_node)
+
+                # Load the notes
+                self.folder_tree_view.folder_opened_without_touch(tree_node)
+
+                # Open the note
+                self.notes_view.activate_note(self.notes_view.path_dictionary[btn.path])
                 break
 
         return super(SearchPopup, self).on_touch_down(touch)
@@ -618,7 +665,7 @@ class FolderLabel(TreeViewLabel):
     This function traverses a directory and adds the folders as children to
     the given tree
 '''
-def populate_tree(tree, path):
+def populate_tree(tree, path, path_dictionary):
 
     added = []
 
@@ -646,14 +693,21 @@ def populate_tree(tree, path):
 
             added = []
             added.append(tree.add_node(FolderLabel(text=os.path.basename(root), path=root)))
+
+            path_dictionary[root] = added[-1]
         else:
 
             added.append(tree.add_node(FolderLabel(text=os.path.basename(root), path=root), added[level-2]))
+
+            path_dictionary[root] = added[-1]
 
 '''
     This is a custom Tree View to view the folders
 '''
 class FolderTreeView(TreeView):
+
+    # This is a quick way to find the tree node given the path
+    path_dictionary = {}
 
     def __init__(self, notes_view,  **kwargs):
         super(FolderTreeView, self).__init__(**kwargs)
@@ -663,7 +717,7 @@ class FolderTreeView(TreeView):
 
         self.notes_view = notes_view
 
-        populate_tree(self, hobbes_db)
+        populate_tree(self, hobbes_db, self.path_dictionary)
 
         # Context menu
         self.context_menu = FolderTreeViewContextMenu(size_hint=(.2, .2))
@@ -688,6 +742,14 @@ class FolderTreeView(TreeView):
             else:
 
                 print("Not a leaf")
+
+    def folder_opened_without_touch(self, node):
+
+        active_node = node
+        
+        if active_node != None:
+
+            self.notes_view.add_notes(active_node.path)
 
 '''
     Each of the notes is represented by one button
@@ -720,6 +782,9 @@ class NoteButton(Button):
 '''
 class NoteView(GridLayout):
 
+    # Store the note path to use with the search function
+    path_dictionary = {}
+
     def __init__(self, note_text_panel, **kwargs):
 
         self.active_note = None
@@ -735,11 +800,15 @@ class NoteView(GridLayout):
     def add_notes(self, path):
 
         self.clear_widgets()
+        self.path_dictionary = {}
 
         for file in sorted_nicely(os.listdir(path)):
             if file.endswith(".txt"):
 
-                self.add_widget(NoteButton(context_menu=self.context_menu, note_view=self, text=file.split(".")[0], path=os.path.join(path, file), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left'))
+                nb = NoteButton(context_menu=self.context_menu, note_view=self, text=file.split(".")[0], path=os.path.join(path, file), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left')
+                self.add_widget(nb)
+
+                self.path_dictionary[os.path.join(path, file)] = nb
 
     '''
         This function handles when a note has been activated
@@ -797,6 +866,11 @@ class NoteTextPanel(BoxLayout):
 
         current_note = None
 
+        # This variable will be used to keep track if the note has new content
+        # that needs to be saved, instead of mindlessly saving it every 30
+        # seconds
+        current_note_saved = True
+
         # Possible view status: 0 = split, 1 = Note, 2 = renderer
         toggle_status = 0
 
@@ -816,6 +890,8 @@ class NoteTextPanel(BoxLayout):
 
         def on_input_text(self, instance, text):
 
+            # Since there is new text, we need to save this note
+            self.current_note_saved = False
             self.note_text_renderer.text = convert(text)
 
         # Toggle between split view, text or renderer
@@ -860,15 +936,25 @@ class NoteTextPanel(BoxLayout):
 
             self.note_text_input.text = text
 
+            # Make sure the scroll is on top
+            self.note_text_input.cursor = (0, 0)
+
+
         # Saves the contents of the current editor to the current note
         def save_note(self):
 
-            if self.current_note != None:
+            if self.current_note != None and not self.current_note_saved:
 
                 print("Writting", self.note_text_input.text, " to", self.current_note)
 
                 with open(self.current_note, 'w') as note:
                     note.write(self.note_text_input.text)
+
+                self.current_note_saved = True
+
+                # Reindex the note
+                reindex_one_note(hobbes_db, '.text_index', self.current_note)
+
 
         # Autosave function
         def autosave(self, dt):
@@ -941,7 +1027,7 @@ class MainScreen(BoxLayout):
         Window.bind(on_key_down=self.on_keyboard)
 
         # Search popup
-        self.search_popup = SearchPopup(size_hint=(None, None), size=(400, 0))
+        self.search_popup = SearchPopup(size_hint=(None, None), size=(400, 0), folder_tree_view=self.folder_tree_view, notes_view=self.notes_view)
 
 
         '''
@@ -967,7 +1053,7 @@ class MainScreen(BoxLayout):
         '''
             Indexing test
         '''
-        index_my_docs(hobbes_db, '.text_index', True)
+        index_my_docs(hobbes_db, '.text_index', False)
 
 
     # This method will be in charge of all the input actions

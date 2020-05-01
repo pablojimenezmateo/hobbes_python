@@ -25,9 +25,10 @@ from kivy.uix.dropdown import DropDown
 from kivy.uix.modalview import ModalView
 
 # For online sync
-from git import Repo
+from git import Repo, exc
 import datetime
 import socket
+import threading
 
 # Filesystem
 import os
@@ -56,9 +57,94 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 
         - Fix images/attachments relative paths, that can be done when converting Markdown -> reStructuredText, just append the hobbes_db path
         - Add option to export to pdf
-        - Add git
         - Implement contextual menu options
 '''
+
+'''
+    GIT on a new thread
+'''
+def git_commit_and_push_threaded(path):
+
+    t = threading.Thread(daemon=True, target=git_commit_and_push, args=[path])
+    t.start()
+
+def git_commit_threaded(path):
+
+    t = threading.Thread(daemon=True, target=git_commit, args=[path])
+    t.start()
+
+def git_commit(path):
+
+    # Check if git is already present on the given repo
+    try:
+
+        repo = Repo(path)
+
+    except exc.InvalidGitRepositoryError:
+
+        print("Creating repo")
+
+        repo = Repo.init(path)
+
+        # Add new changes
+        repo.git.add('--all')
+        date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        device_name = socket.gethostname()
+        repo.index.commit('Changes: ' + date + ' Device: ' + device_name)
+
+'''
+    Given a folder, if there is no .git create it
+    Then commit the changes, if origin is set up
+    pull then push
+'''
+def git_commit_and_push(path):
+
+        # Check if git is already present on the given repo
+        try:
+
+            repo = Repo(path)
+
+        except exc.InvalidGitRepositoryError:
+
+            print("Creating repo")
+
+            repo = Repo.init(path)
+
+        # Check if the git has a remote configured
+        git_is_local = True
+
+        try:
+            repo.git.checkout('master')
+            git_is_local = False
+
+        except exc.GitCommandError:
+            git_is_local = True
+            git_commit(path)
+
+        # If there is a remote configured do a pull
+        if not git_is_local:
+
+            print("Not local, remote configured")
+
+            origin = repo.remote(name='origin')
+
+            # Pull any changes
+            try:
+                origin.pull()
+
+            except exc.GitCommandError:
+
+                print("Either not internet or origin is not well configured")
+
+            git_commit(path)
+
+            # Push everything
+            try:
+                origin.push()
+
+            except exc.GitCommandError:
+
+                print("Either not internet or origin is not well configured")
 
 '''
     From the Whoosh docs, incremental indexing of the files
@@ -1029,32 +1115,45 @@ class MainScreen(BoxLayout):
         # Search popup
         self.search_popup = SearchPopup(size_hint=(None, None), size=(400, 0), folder_tree_view=self.folder_tree_view, notes_view=self.notes_view)
 
-
         '''
-        GIT TEST: Better do this in a new thread
-        '''
-
-        ## Check if the .git folder exist on the repo
-        #repo = Repo(os.path.join(hobbes_db, 'Work'))
-        #origin = repo.remote(name='origin')
-
-        ## Pull any changes
-        #origin.pull()
-
-        ## Add new changes
-        #repo.git.add('--all')
-        #date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        #device_name = socket.gethostname()
-        #repo.index.commit('Sync: ' + date + ' Device: ' + device_name)
-        #
-        ## Push everything
-        #origin.push()
-
-        '''
-            Indexing test
+            Indexing new files
         '''
         index_my_docs(hobbes_db, '.text_index', False)
 
+        '''
+            Git sync
+        '''
+        # Create a commit every 30 seconds and a push every 5 minutes
+        Clock.schedule_interval(self.do_commit, 30)
+        Clock.schedule_interval(self.do_push, 300)
+
+    # This method commits all top level folders from the db
+    def do_commit(self, dt):
+
+        for path in self.folder_tree_view.path_dictionary:
+
+            relative_path = path.replace(hobbes_db, '')
+
+            level = relative_path.count(os.sep)
+
+            if level == 1:
+
+                print("Commit ", path)
+                git_commit_threaded(path)
+
+    # This method pushes all top level folders from the db
+    def do_push(self, dt):
+
+        for path in self.folder_tree_view.path_dictionary:
+
+            relative_path = path.replace(hobbes_db, '')
+
+            level = relative_path.count(os.sep)
+
+            if level == 1:
+
+                print("Push ", path)
+                git_commit_and_push_threaded(path)
 
     # This method will be in charge of all the input actions
     def on_touch_down(self, touch):

@@ -18,6 +18,18 @@ My own notetaking application.
 
 sudo apt-get install xclip xsel
 
+
+## How to configure remote git
+
+By defaul Hobbes creates a local git if no git has been created. If you want to add a remote do:
+
+```
+git remote add origin git@github.com:pjimenezmateo/Personal_test.git
+git push -u origin master
+```
+
+You should also have the SSH keys correctly configured
+
 ## How to build
 Activate environment:
 

@@ -4,6 +4,7 @@ kivy.require('1.11.1') # Kivy version
 from kivy.config import Config
 # By default kivy exits when Esc is pressed, overwrite it
 Config.set('kivy', 'exit_on_escape', '0')
+Config.set('graphics', 'maxfps', '30')
 
 from kivy.app import App
 from kivy.uix.label import Label
@@ -48,13 +49,32 @@ from whoosh.fields import Schema, ID, TEXT, DATETIME
 from whoosh.qparser import MultifieldParser
 import datetime
 
+# For the attachments
+import hashlib
+from shutil import copyfile
+
 # Global definitions
 # This is the path where notes will be stored and read from
 hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 
+# Colors
+SEARCH_POPUP_BACKGROUND_COLOR = (0, 0, 0, 0)
+SEARCH_BUTTON_TEXT_COLOR = (0, 0, 0, 1)
+NOTE_VIEW_NOT_ACTIVE_NOTE_COLOR = (1, 1, 1, 1)
+NOTE_VIEW_ACTIVE_NOTE_COLOR = (1, 1, 1, 0.5)
+
+NOTE_INPUT_FONT_SIZE = 24
+
+NOTE_RENDERER_BACKGROUND_COLOR = (1, 1, 1, 1)
+NOTE_RENDERER_UNDERLINE_COLOR = '000000FF'
+NOTE_RENDERER_FONT_SIZE = 48
+
+
 '''
     TODO:
 
+        - Change restructuredText with https://kivy.org/doc/stable/api-kivy.core.text.markup.html
+        - Pygments seems to have markdown to bbcode https://pygments.org/docs/formatters/
         - Fix images/attachments relative paths, that can be done when converting Markdown -> reStructuredText, just append the hobbes_db path
         - Add option to export to pdf
         - Implement contextual menu options
@@ -283,7 +303,7 @@ class SearchPopup(ModalView):
 
         # Remove background
         self.background = 'media/images/transparent.png'
-        self.background_color = (0, 0, 0, 0)
+        self.background_color = SEARCH_POPUP_BACKGROUND_COLOR
 
         # To check if it is active
         self.active = False
@@ -342,7 +362,7 @@ class SearchPopup(ModalView):
                 beautiful_path = hit['path'].replace(hobbes_db, '')
                 beautiful_path = '>'.join(beautiful_path.split(os.sep)[1:-1]) + '>' + hit['title']
 
-                btn = SearchButton(text=beautiful_path, path=hit['path'], color=(0, 0, 0, 1))
+                btn = SearchButton(text=beautiful_path, path=hit['path'], color=SEARCH_BUTTON_TEXT_COLOR)
                 self.layout.add_widget(btn)
 
                 self.buttons.append(btn)
@@ -904,14 +924,13 @@ class NoteView(GridLayout):
         # Background logic
         if self.active_note != None:
 
-            self.active_note.background_color = (1, 1, 1, 1) # Background color of note
+            self.active_note.background_color = NOTE_VIEW_NOT_ACTIVE_NOTE_COLOR # Background color of note
 
-        note.background_color  = (1, 1, 1, 0.5) # Background color when selected
+        note.background_color  = NOTE_VIEW_ACTIVE_NOTE_COLOR # Background color when selected
         self.active_note = note
 
         # Send note to text input
         self.note_text_panel.load_note(self.active_note.path)
-
 
 '''
     This will be used to edit notes
@@ -921,9 +940,10 @@ class NoteTextInput(TextInput):
     def __init__(self, **kwargs):
         super(NoteTextInput, self).__init__(**kwargs)
 
-        self.font_size = 24
+        self.font_size = NOTE_INPUT_FONT_SIZE
         self.background_normal = ''
         self.padding = [16, 15, 6, 6]
+
 
 class NoteTextRenderer(RstDocument):
 
@@ -934,13 +954,15 @@ class NoteTextRenderer(RstDocument):
         #{'background': 'ffffffff', 'link': 'ce5c00ff', 'paragraph': '202020ff', 'title': '204a87ff', 'bullet': '000000ff'}
 
         # Set the background color to white
-        self.background_color = (1, 1, 1, 1)
+        self.background_color = NOTE_RENDERER_BACKGROUND_COLOR
 
         #  Set the color of the underline of the titles
-        self.underline_color = '000000FF'
+        self.underline_color = NOTE_RENDERER_UNDERLINE_COLOR
 
         # Set the size of the title, the rest of the font sizes are derived from this
-        self.base_font_size = 48
+        self.base_font_size = NOTE_RENDERER_FONT_SIZE
+
+
 
 '''
     Combination of the text editor and renderer, I  write my notes in Markdown but the renderer is in reStructuredText
@@ -950,6 +972,7 @@ class NoteTextPanel(BoxLayout):
         note_text_input    = NoteTextInput(size_hint=(.5, 1), multiline=True)
         note_text_renderer = NoteTextRenderer(size_hint=(.5, 1))
 
+        # The path of the active note
         current_note = None
 
         # This variable will be used to keep track if the note has new content
@@ -974,11 +997,19 @@ class NoteTextPanel(BoxLayout):
             # Autosave each 30 seconds
             Clock.schedule_interval(self.autosave, 30)
 
+            # Listen for a dropped file
+            Window.bind(on_dropfile=self.on_file_drop)
+
         def on_input_text(self, instance, text):
 
             # Since there is new text, we need to save this note
             self.current_note_saved = False
-            self.note_text_renderer.text = convert(text)
+
+            # Convert attachment links correctly
+            text = text.replace('![local_image](', '![local_image](' + hobbes_db + os.sep)
+            text = text.replace('[local_file](',     '[local_file](' + hobbes_db + os.sep)
+
+            self.note_text_renderer.text = text #convert(text)
 
         # Toggle between split view, text or renderer
         def toggle(self):
@@ -1025,7 +1056,6 @@ class NoteTextPanel(BoxLayout):
             # Make sure the scroll is on top
             self.note_text_input.cursor = (0, 0)
 
-
         # Saves the contents of the current editor to the current note
         def save_note(self):
 
@@ -1041,11 +1071,65 @@ class NoteTextPanel(BoxLayout):
                 # Reindex the note
                 reindex_one_note(hobbes_db, '.text_index', self.current_note)
 
-
         # Autosave function
         def autosave(self, dt):
 
             self.save_note()
+
+        # Handle dropped files
+        def on_file_drop(self, window, file_path):
+
+            if self.current_note != None:
+
+                print(file_path)
+
+                # The file will be renamed to its hash to try to avoid name collitions
+                file_hash = hashlib.sha256()
+
+                with open(file_path, 'rb') as f:
+
+                    fb = f.read(65536)
+
+                    while len(fb) > 0:
+
+                        file_hash.update(fb) 
+                        fb = f.read(65536)
+
+                # Create the file on the .attachments folder
+                dst_path = self.current_note.replace(hobbes_db, '').split(os.sep)[1]
+                base_folder = dst_path
+                dst_path = os.path.join(hobbes_db, dst_path)
+                dst_path = os.path.join(dst_path, '.attachments')
+
+                # Create the attachment folder if it does not exist
+                if not os.path.exists(dst_path):
+
+                    os.mkdir(dst_path)
+
+                extension = os.path.basename(file_path.decode("utf-8", "strict")).split(".")[1]
+                new_name = file_hash.hexdigest() + '.' + extension
+
+                is_image = False
+
+                if extension in ['png', 'jpg', 'jpeg', 'gif']:
+
+                    is_image = True
+
+                try:
+                    copyfile(file_path, os.path.join(dst_path, new_name))
+
+                except:
+
+                    print("Error copying file")
+
+                # Add the correctly formated relative URL
+                if is_image:
+
+                    self.note_text_input.insert_text('![local_image](' + os.path.join(base_folder + os.sep + '.attachments', new_name) + ')')
+                else:
+
+                    self.note_text_input.insert_text('[local_file](' + os.path.join(base_folder + os.sep + '.attachments', new_name) + ')')
+
 
 class MusicSlider(Slider):
 
@@ -1126,6 +1210,7 @@ class MainScreen(BoxLayout):
         # Create a commit every 30 seconds and a push every 5 minutes
         Clock.schedule_interval(self.do_commit, 30)
         Clock.schedule_interval(self.do_push, 300)
+
 
     # This method commits all top level folders from the db
     def do_commit(self, dt):

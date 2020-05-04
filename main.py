@@ -24,6 +24,7 @@ from kivy.clock import Clock
 from kivy.uix.slider import Slider
 from kivy.uix.dropdown import DropDown
 from kivy.uix.modalview import ModalView
+from kivy.core.text.markup import MarkupLabel
 
 # For online sync
 from git import Repo, exc
@@ -945,32 +946,55 @@ class NoteTextInput(TextInput):
         self.padding = [16, 15, 6, 6]
 
 
-class NoteTextRenderer(RstDocument):
+#class NoteTextRenderer(Label):
+#
+#    def __init__(self, **kwargs):
+#        super(NoteTextRenderer, self).__init__(**kwargs)
+#
+#        # Available colors
+#        #{'background': 'ffffffff', 'link': 'ce5c00ff', 'paragraph': '202020ff', 'title': '204a87ff', 'bullet': '000000ff'}
+#
+#        # Set the background color to white
+#       #self.background_color = NOTE_RENDERER_BACKGROUND_COLOR
+#
+#       ##  Set the color of the underline of the titles
+#       #self.underline_color = NOTE_RENDERER_UNDERLINE_COLOR
+#
+#       ## Set the size of the title, the rest of the font sizes are derived from this
+#       #self.base_font_size = NOTE_RENDERER_FONT_SIZE
+#
+#        # Listen for hiperlinks
+#        #self.bind(on_ref_press=self.reference_click)
+#
+#        #self.text_size = (self.width, None)
+#
+#        # Text on the left
+#        #self.bind(size=self.setter('texture_size'))
+#        #self.bind(size=self.setter('text_size'))
+#        #self.bind(height=self.setter('texture_size'))
+#        #self.bind(text_size=self.setter('text_size'))
+#        #self.bind(minimum_height = self.setter('height'))
+#
+#    def reference_click(self, instance, value):
+#
+#        print(value)
+#
+#
+class NoteTextRenderer(ScrollView): 
 
     def __init__(self, **kwargs):
         super(NoteTextRenderer, self).__init__(**kwargs)
 
-        # Available colors
-        #{'background': 'ffffffff', 'link': 'ce5c00ff', 'paragraph': '202020ff', 'title': '204a87ff', 'bullet': '000000ff'}
+    def reference_click(self, instance, value):
 
-        # Set the background color to white
-        self.background_color = NOTE_RENDERER_BACKGROUND_COLOR
-
-        #  Set the color of the underline of the titles
-        self.underline_color = NOTE_RENDERER_UNDERLINE_COLOR
-
-        # Set the size of the title, the rest of the font sizes are derived from this
-        self.base_font_size = NOTE_RENDERER_FONT_SIZE
-
-
-
+        print(value)
 '''
     Combination of the text editor and renderer, I  write my notes in Markdown but the renderer is in reStructuredText
 '''
 class NoteTextPanel(BoxLayout):
 
-        note_text_input    = NoteTextInput(size_hint=(.5, 1), multiline=True)
-        note_text_renderer = NoteTextRenderer(size_hint=(.5, 1))
+        
+        #note_text_renderer = NoteTextRenderer(size_hint=(1, None), markup=True)
 
         # The path of the active note
         current_note = None
@@ -987,12 +1011,18 @@ class NoteTextPanel(BoxLayout):
             super(NoteTextPanel, self).__init__(**kwargs)
 
             self.orientation = 'horizontal'
+
+            self.note_text_input    = NoteTextInput(size_hint=(.5, 1), multiline=True)
+            self.note_text_renderer = NoteTextRenderer(size_hint=(.5, None))
+
             self.add_widget(self.note_text_input)
+
+
 
             # Listen to input text and render it realtime
             self.note_text_input.bind(text=self.on_input_text)
 
-            self.add_widget(self.note_text_renderer)
+            self.add_widget(self.note_text_renderer)#self.note_text_rendere_scroll)
 
             # Autosave each 30 seconds
             Clock.schedule_interval(self.autosave, 30)
@@ -1009,7 +1039,7 @@ class NoteTextPanel(BoxLayout):
             text = text.replace('![local_image](', '![local_image](' + hobbes_db + os.sep)
             text = text.replace('[local_file](',     '[local_file](' + hobbes_db + os.sep)
 
-            self.note_text_renderer.text = text #convert(text)
+            #self.note_text_renderer.text = text #convert(text)
 
         # Toggle between split view, text or renderer
         def toggle(self):

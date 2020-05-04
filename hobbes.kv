@@ -40,7 +40,7 @@
             width: 1
             rectangle: self.x, self.y, self.width, 1
 
-<NoteButton>
+<NoteButton>:
 
     background_normal: ''
     background_down: ''
@@ -55,3 +55,25 @@
             width: 1
             rectangle: self.x, self.y, self.width, 1
             
+<NoteTextRenderer>:
+
+    do_scroll_x: False
+    do_scroll_y: True
+
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1 # Background
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Label:
+        id: 'label'
+        text: 'loremipsum ' * 100
+        text_size: self.width, None  # Set the text wrap box width
+        size_hint_y: None
+        height: self.texture_size[1]  # Set the Label height to the text height
+
+        color: 0, 0, 0, 1 # Text color
+
+

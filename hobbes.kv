@@ -68,8 +68,8 @@
             size: self.size
 
     Label:
-        id: 'label'
-        text: 'loremipsum ' * 100
+        id: label
+        markup: True
         text_size: self.width, None  # Set the text wrap box width
         size_hint_y: None
         height: self.texture_size[1]  # Set the Label height to the text height

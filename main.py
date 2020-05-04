@@ -967,7 +967,8 @@ class NoteTextRenderer(ScrollView):
         '''
             Image test
         '''
-        self.label.text = 'The Image should go around here: \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nHellooo [anchor=Image]O \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n[ref=Hello]REFERENCE[/ref]'
+        self.original_text = 'This is a quick test to see how the image resizing would work: \n [anchor=Image]O \n[ref=Hello]REFERENCE[/ref]'
+        self.label.text = self.original_text
 
     def reference_click(self, instance, value):
 
@@ -986,6 +987,7 @@ class NoteTextRenderer(ScrollView):
 
         wimg.pos = (0, self.label.texture_size[1] - self.label.anchors['Image'][1])
 
+
         # After adding the image, I need to add enough whitespaces on that position so that the image does not cover the text
 
     def resize_width(self, instance, size):
@@ -996,6 +998,12 @@ class NoteTextRenderer(ScrollView):
 
             i.width = self.width
             i.height = self.width/i.image_ratio
+
+            vspace = round(i.height / (NOTE_INPUT_FONT_SIZE + 4)) # That 4 is for intelining spacing
+
+            print(vspace)
+            self.label.text = self.original_text.replace('[anchor=Image]', '\n'*vspace + '[anchor=Image]')
+
            
 '''
     Combination of the text editor and renderer, I  write my notes in Markdown but the renderer is in reStructuredText

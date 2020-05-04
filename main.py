@@ -959,6 +959,11 @@ class NoteTextRenderer(ScrollView):
         #Listen for hiperlinks
         self.label.bind(on_ref_press=self.reference_click)
 
+        # Stored images
+        self.images = []
+
+        self.bind(width=self.resize_width)
+
         '''
             Image test
         '''
@@ -968,14 +973,30 @@ class NoteTextRenderer(ScrollView):
 
         # Add the image on the anchor 'Image'
         # I can use the anchor value to store the image
-        wimg = Image(source='/home/gef/Documents/Hobbes-many/kivy/db/Personal/.attachments/test.jpg')
+
+        wimg = Image(source='/home/gef/Documents/Hobbes-many/kivy/db/Personal/.attachments/0b10881088bd02c7ad78331a5a1816f8d64ea1601936e79e1f1278d3d66009e1.png')
         self.label.add_widget(wimg)
 
-        wimg.pos = (self.label.anchors['Image'][0], self.label.texture_size[1] - self.label.anchors['Image'][1])
+        self.images.append(wimg)
+
+        print(self.width)
+        #wimg.bind(width=self.setter('width'))
+        wimg.width = 240
+        wimg.height =  240/wimg.image_ratio
+
+        wimg.pos = (0, self.label.texture_size[1] - self.label.anchors['Image'][1])
 
         # After adding the image, I need to add enough whitespaces on that position so that the image does not cover the text
 
+    def resize_width(self, instance, size):
 
+        print("New width", size)
+
+        for i in self.images:
+
+            i.width = self.width
+            i.height = self.width/i.image_ratio
+           
 '''
     Combination of the text editor and renderer, I  write my notes in Markdown but the renderer is in reStructuredText
 '''

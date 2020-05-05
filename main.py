@@ -960,49 +960,122 @@ class NoteTextRenderer(ScrollView):
         self.label.bind(on_ref_press=self.reference_click)
 
         # Stored images
-        self.images = []
+        self.images = {}
 
         self.bind(width=self.resize_width)
 
-        '''
-            Image test
-        '''
-        self.original_text = 'This is a quick test to see how the image resizing would work: \n [anchor=Image]O \n[ref=Hello]REFERENCE[/ref]'
-        self.label.text = self.original_text
+        # We need to keep an eye to re render the images
+        Clock.schedule_interval(self.render_images, 0.1)
+
+        self.images_need_rerender = False
+
+    def set_text(self, current_note_path, text):
+
+        self.original_text = text
+
+        self.images_need_rerender = True
+
+        # First parse the text for images
+        # Anything that isn't a square closing bracket
+        name_regex = "[^]]+"
+
+        # Everything until a closed parenthesis
+        url_regex = "[^)]+"
+
+        markup_regex = '\[({0})]\(\s*({1})\s*\)'.format(name_regex, url_regex)
+
+        # Load all the images
+        for ind, match in enumerate(re.findall(markup_regex, text)):
+
+            # Get the absolute path of the attachment from the relative path
+            saved_path = os.getcwd()
+            os.chdir(os.path.split(current_note_path)[0]) 
+            abs_attachment_path = os.path.abspath(match[1])
+            os.chdir(saved_path)
+
+            if match[0] == 'local_image':
+
+                if abs_attachment_path not in self.images:
+
+                    wimg = Image(source=abs_attachment_path)
+                    self.label.add_widget(wimg)
+                    self.images[abs_attachment_path] = wimg
+
+                    print("Loading", abs_attachment_path)
+                    # Create an anchor with the index of the image
+                    #re.sub(r'\[({0})]\(\s*({1})\s*\)', '[anchor=' + str(ind) + ']', text, 1)
+
+                self.original_text = self.original_text.replace('![local_image](' + match[1] + ')', '[anchor=' + abs_attachment_path + '].')
+
+        # Convert attachment links correctly
+        # We need to get the relative path, translate it to an absolute path
+        # and then add it to an [anchor] tag
+
+        # Get the absolute path with os.path.abspath(rel_path)
+
+        #self.label.text = self.original_text
+
 
     def reference_click(self, instance, value):
 
         # Add the image on the anchor 'Image'
         # I can use the anchor value to store the image
 
-        wimg = Image(source='/home/gef/Documents/Hobbes-many/kivy/db/Personal/.attachments/0b10881088bd02c7ad78331a5a1816f8d64ea1601936e79e1f1278d3d66009e1.png')
-        self.label.add_widget(wimg)
-
-        self.images.append(wimg)
-
-        print(self.width)
-        #wimg.bind(width=self.setter('width'))
-        wimg.width = 240
-        wimg.height =  240/wimg.image_ratio
-
-        wimg.pos = (0, self.label.texture_size[1] - self.label.anchors['Image'][1])
+        #wimg = Image(source='/home/gef/Documents/Hobbes-many/kivy/db/Personal/.attachments/0b10881088bd02c7ad78331a5a1816f8d64ea1601936e79e1f1278d3d66009e1.png')
+        #self.label.add_widget(wimg)
+#
+        #self.images.append(wimg)
+#
+        #print(self.width)
+        ##wimg.bind(width=self.setter('width'))
+        #wimg.width = 240
+        #wimg.height =  240/wimg.image_ratio
+#
+        #wimg.pos = (0, self.label.texture_size[1] - self.label.anchors['Image'][1])
+        pass
 
 
         # After adding the image, I need to add enough whitespaces on that position so that the image does not cover the text
 
+
+    def render_images(self, dt):
+
+        if self.images_need_rerender:
+
+            self.images_need_rerender = False
+
+            # First modify the text
+            aux_text = self.original_text
+
+            for name, anc in self.label.anchors.items():
+
+                i = self.images[name]
+
+                i.width = self.width - 32
+                i.height = self.width/i.image_ratio
+
+                vspace = round(i.height / (NOTE_INPUT_FONT_SIZE + 4)) # That 4 is for intelining spacing
+
+                aux_text = aux_text.replace('[anchor=' + name + '].', '\n'*vspace + '[anchor=' + name + '].')
+
+            self.label.text = aux_text
+
+            Clock.schedule_once(self.move_images)
+
+    def move_images(self, dt):
+
+        # Then position the images
+        for name, anc in self.label.anchors.items():
+
+            i = self.images[name]
+            i.pos = (16, self.label.texture_size[1] - self.label.anchors[name][1])
+
     def resize_width(self, instance, size):
 
-        print("New width", size)
 
-        for i in self.images:
+        print("Resize")
 
-            i.width = self.width
-            i.height = self.width/i.image_ratio
-
-            vspace = round(i.height / (NOTE_INPUT_FONT_SIZE + 4)) # That 4 is for intelining spacing
-
-            print(vspace)
-            self.label.text = self.original_text.replace('[anchor=Image]', '\n'*vspace + '[anchor=Image]')
+        #print(self.label.text)
 
            
 '''
@@ -1047,11 +1120,8 @@ class NoteTextPanel(BoxLayout):
             # Since there is new text, we need to save this note
             self.current_note_saved = False
 
-            # Convert attachment links correctly
-            text = text.replace('![local_image](', '![local_image](' + hobbes_db + os.sep)
-            text = text.replace('[local_file](',     '[local_file](' + hobbes_db + os.sep)
 
-            #self.note_text_renderer.label.text = text #convert(text)
+            self.note_text_renderer.set_text(self.current_note, text)
 
         # Toggle between split view, text or renderer
         def toggle(self):
@@ -1165,12 +1235,15 @@ class NoteTextPanel(BoxLayout):
                     print("Error copying file")
 
                 # Add the correctly formated relative URL
+                attachment_path = os.path.join(hobbes_db, os.path.join(base_folder, '.attachments'))
+                relative_path = os.path.relpath(os.path.join(hobbes_db, attachment_path), os.path.split(self.current_note)[0])
+
                 if is_image:
 
-                    self.note_text_input.insert_text('![local_image](' + os.path.join(base_folder + os.sep + '.attachments', new_name) + ')')
+                    self.note_text_input.insert_text('![local_image](' + os.path.join(relative_path, new_name) + ')')
                 else:
 
-                    self.note_text_input.insert_text('[local_file](' + os.path.join(base_folder + os.sep + '.attachments', new_name) + ')')
+                    self.note_text_input.insert_text('[local_file](' + os.path.join(relative_path, new_name) + ')')
 
 
 class MusicSlider(Slider):

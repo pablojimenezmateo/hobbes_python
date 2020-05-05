@@ -964,10 +964,23 @@ class NoteTextRenderer(ScrollView):
 
         self.bind(width=self.resize_width)
 
+        self.images_need_rerender = False
+        self.is_new_note = False
+
         # We need to keep an eye to re render the images
         Clock.schedule_interval(self.render_images, 0.1)
 
-        self.images_need_rerender = False
+    def on_new_note_open(self, current_note_path, text):
+
+        for path, w in self.images.items():
+
+            self.label.remove_widget(w)
+
+        self.images = {}
+
+        self.is_new_note = True
+
+        self.set_text(current_note_path, text)
 
     def set_text(self, current_note_path, text):
 
@@ -1012,8 +1025,10 @@ class NoteTextRenderer(ScrollView):
         # and then add it to an [anchor] tag
 
         # Get the absolute path with os.path.abspath(rel_path)
+        if self.is_new_note:
 
-        #self.label.text = self.original_text
+            self.label.text = self.original_text
+            self.is_new_note = False
 
 
     def reference_click(self, instance, value):
@@ -1036,7 +1051,6 @@ class NoteTextRenderer(ScrollView):
 
 
         # After adding the image, I need to add enough whitespaces on that position so that the image does not cover the text
-
 
     def render_images(self, dt):
 
@@ -1074,7 +1088,7 @@ class NoteTextRenderer(ScrollView):
 
 
         print("Resize")
-
+        self.images_need_rerender = True
         #print(self.label.text)
 
            
@@ -1164,9 +1178,11 @@ class NoteTextPanel(BoxLayout):
                 text = note.read()
 
             self.note_text_input.text = text
+            self.note_text_renderer.on_new_note_open(self.current_note, text)
 
             # Make sure the scroll is on top
             self.note_text_input.cursor = (0, 0)
+
 
         # Saves the contents of the current editor to the current note
         def save_note(self):

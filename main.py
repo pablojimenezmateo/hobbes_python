@@ -970,6 +970,8 @@ class NoteTextRenderer(ScrollView):
         # We need to keep an eye to re render the images
         Clock.schedule_interval(self.render_images, 0.1)
 
+        self.original_text = ''
+
     def on_new_note_open(self, current_note_path, text):
 
         for path, w in self.images.items():
@@ -984,6 +986,7 @@ class NoteTextRenderer(ScrollView):
 
     def set_text(self, current_note_path, text):
 
+        print("SET")
         self.original_text = text
 
         self.images_need_rerender = True
@@ -1086,8 +1089,6 @@ class NoteTextRenderer(ScrollView):
 
     def resize_width(self, instance, size):
 
-
-        print("Resize")
         self.images_need_rerender = True
         #print(self.label.text)
 
@@ -1133,7 +1134,6 @@ class NoteTextPanel(BoxLayout):
 
             # Since there is new text, we need to save this note
             self.current_note_saved = False
-
 
             self.note_text_renderer.set_text(self.current_note, text)
 

@@ -35,9 +35,6 @@ import threading
 # Filesystem
 import os
 
-# Markdown to restructuredText
-from m2r import convert
-
 # Used for natural sorting
 import re 
 
@@ -53,6 +50,10 @@ import datetime
 # For the attachments
 import hashlib
 from shutil import copyfile
+
+# To translate markdown to bbcode
+from markdown import markdown
+from html2bbcode.parser import HTML2BBCode
 
 # Global definitions
 # This is the path where notes will be stored and read from
@@ -747,7 +748,6 @@ class NoteViewContextMenu(Popup):
     def import_note_to_pdf(self, in_path, out_path):
 
         # This imports are expensive, that is why they are not loaded on start
-        from markdown import markdown
         from weasyprint import HTML
 
         html = markdown(self.note_text_input.text, output_format='html4')
@@ -962,7 +962,10 @@ class NoteTextRenderer(ScrollView):
         # Stored images
         self.images = {}
 
-        self.bind(width=self.resize_width)
+        # This dirty hack is to avoid a bug
+        # that would cause the bind [self.bind(width=self.resize_width)] to be called on loop
+        # Just check if the Window has been resized
+        self.prev_width = self.width
 
         self.images_need_rerender = False
         self.is_new_note = False
@@ -986,22 +989,17 @@ class NoteTextRenderer(ScrollView):
 
     def set_text(self, current_note_path, text):
 
-        print("SET")
         self.original_text = text
 
         self.images_need_rerender = True
 
-        # First parse the text for images
-        # Anything that isn't a square closing bracket
-        name_regex = "[^]]+"
-
-        # Everything until a closed parenthesis
-        url_regex = "[^)]+"
-
-        markup_regex = '\[({0})]\(\s*({1})\s*\)'.format(name_regex, url_regex)
+        # First parse the text for links
+        link_re = re.compile(r'^!?\[(local[^\]]+)\]\(([^)]+)\)$', flags=re.MULTILINE)
 
         # Load all the images
-        for ind, match in enumerate(re.findall(markup_regex, text)):
+        for ind, match in enumerate(link_re.findall(text)):
+
+            print("Match:", match[0])
 
             # Get the absolute path of the attachment from the relative path
             saved_path = os.getcwd()
@@ -1036,28 +1034,20 @@ class NoteTextRenderer(ScrollView):
 
     def reference_click(self, instance, value):
 
-        # Add the image on the anchor 'Image'
-        # I can use the anchor value to store the image
+        print("Reference clicked: ", value)
 
-        #wimg = Image(source='/home/gef/Documents/Hobbes-many/kivy/db/Personal/.attachments/0b10881088bd02c7ad78331a5a1816f8d64ea1601936e79e1f1278d3d66009e1.png')
-        #self.label.add_widget(wimg)
-#
-        #self.images.append(wimg)
-#
-        #print(self.width)
-        ##wimg.bind(width=self.setter('width'))
-        #wimg.width = 240
-        #wimg.height =  240/wimg.image_ratio
-#
-        #wimg.pos = (0, self.label.texture_size[1] - self.label.anchors['Image'][1])
-        pass
-
-
-        # After adding the image, I need to add enough whitespaces on that position so that the image does not cover the text
 
     def render_images(self, dt):
 
+        # If the width has changed
+        if self.prev_width != self.width:
+            self.images_need_rerender = True
+
+            self.prev_width = self.width
+
         if self.images_need_rerender:
+
+            print("Render", self.width)
 
             self.images_need_rerender = False
 
@@ -1071,11 +1061,17 @@ class NoteTextRenderer(ScrollView):
                 i.width = self.width - 32
                 i.height = self.width/i.image_ratio
 
+                # After adding the image, I need to add enough whitespaces on that position so that the image does not cover the text
                 vspace = round(i.height / (NOTE_INPUT_FONT_SIZE + 4)) # That 4 is for intelining spacing
 
                 aux_text = aux_text.replace('[anchor=' + name + '].', '\n'*vspace + '[anchor=' + name + '].')
 
-            self.label.text = aux_text
+
+            # Translate to BBCODE
+            #html = markdown(aux_text, output_format='html4')
+            #parser = HTML2BBCode()
+
+            self.label.text = aux_text#str(parser.feed(html))
 
             Clock.schedule_once(self.move_images)
 
@@ -1086,12 +1082,6 @@ class NoteTextRenderer(ScrollView):
 
             i = self.images[name]
             i.pos = (16, self.label.texture_size[1] - self.label.anchors[name][1])
-
-    def resize_width(self, instance, size):
-
-        self.images_need_rerender = True
-        #print(self.label.text)
-
            
 '''
     Combination of the text editor and renderer, I  write my notes in Markdown but the renderer is in reStructuredText

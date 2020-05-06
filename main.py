@@ -15,7 +15,7 @@ from kivy.uix.treeview import TreeView, TreeViewLabel
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
-from kivy.graphics import Rectangle
+from kivy.graphics import Rectangle, Color
 from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
@@ -25,6 +25,7 @@ from kivy.uix.slider import Slider
 from kivy.uix.dropdown import DropDown
 from kivy.uix.modalview import ModalView
 from kivy.uix.image import Image
+
 
 # For online sync
 from git import Repo, exc
@@ -999,7 +1000,9 @@ class NoteTextRenderer(ScrollView):
         # Load all the images
         for ind, match in enumerate(link_re.findall(text)):
 
-            print("Match:", match[0])
+            # Convert attachment links correctly
+            # We need to get the relative path, translate it to an absolute path
+            # and then add it to an [anchor] tag
 
             # Get the absolute path of the attachment from the relative path
             saved_path = os.getcwd()
@@ -1016,14 +1019,8 @@ class NoteTextRenderer(ScrollView):
                     self.images[abs_attachment_path] = wimg
 
                     print("Loading", abs_attachment_path)
-                    # Create an anchor with the index of the image
-                    #re.sub(r'\[({0})]\(\s*({1})\s*\)', '[anchor=' + str(ind) + ']', text, 1)
 
                 self.original_text = self.original_text.replace('![local_image](' + match[1] + ')', '[anchor=' + abs_attachment_path + '].')
-
-        # Convert attachment links correctly
-        # We need to get the relative path, translate it to an absolute path
-        # and then add it to an [anchor] tag
 
         # Get the absolute path with os.path.abspath(rel_path)
         if self.is_new_note:
@@ -1064,15 +1061,33 @@ class NoteTextRenderer(ScrollView):
                 # After adding the image, I need to add enough whitespaces on that position so that the image does not cover the text
                 vspace = round(i.height / (NOTE_INPUT_FONT_SIZE + 4)) # That 4 is for intelining spacing
 
-                aux_text = aux_text.replace('[anchor=' + name + '].', '\n'*vspace + '[anchor=' + name + '].')
+                aux_text = aux_text.replace('[anchor=' + name + '].', '\n'*vspace + '[anchor=' + name + ']')
 
 
-            # Translate to BBCODE
-            #html = markdown(aux_text, output_format='html4')
-            #parser = HTML2BBCode()
+            # Partial translation to kivy Markdown
+            # Code blocks
+            aux_text = re.sub(r'\`{3}(\s*[a-z]*\s*)([^\`]+)\`{3}', "[ref=code][font=media/fonts/FiraCode-Regular.ttf]\\2[/font][/ref]", aux_text)
 
-            self.label.text = aux_text#str(parser.feed(html))
+            # Links
+            aux_text = re.sub(r"\[(.*?)\]\((.*?)\)", "[u][color=#0000EE][ref=\\2]\\1[/ref][/color][/u]", aux_text)
 
+            # Bold
+            aux_text = re.sub(r"\B([*_]{2})\b(.+?)\1\B", "[b]\\2[/b]", aux_text)
+
+            # Italic
+            aux_text = re.sub(r"\B([*_])\b(.+?)\1\B", "[i]\\2[/i]", aux_text)
+
+            # Titles
+            aux_text = re.sub(r"(?m)^#####\s+(.*?)\s*#*$", "[size=40][b]\\1[/b][/size]", aux_text)
+            aux_text = re.sub(r"(?m)^####\s+(.*?)\s*#*$",  "[size=50][b]\\1[/b][/size]", aux_text)
+            aux_text = re.sub(r"(?m)^###\s+(.*?)\s*#*$",   "[size=60][b]\\1[/b][/size]", aux_text)
+            aux_text = re.sub(r"(?m)^##\s+(.*?)\s*#*$",    "[size=70][b]\\1[/b][/size]", aux_text)
+            aux_text = re.sub(r"(?m)^#\s+(.*?)\s*#*$",     "[size=80][b]\\1[/b][/size]", aux_text)
+
+            self.label.text = aux_text
+
+            # We need to do this one tick after the label has rendered
+            Clock.schedule_once(self.draw_backgrounds)
             Clock.schedule_once(self.move_images)
 
     def move_images(self, dt):
@@ -1082,6 +1097,38 @@ class NoteTextRenderer(ScrollView):
 
             i = self.images[name]
             i.pos = (16, self.label.texture_size[1] - self.label.anchors[name][1])
+
+    # This functions are used to add a background to the special blocks
+    @staticmethod
+    def get_x(label, ref_x):
+        """ Return the x value of the ref/anchor relative to the canvas """
+        return label.center_x - label.texture_size[0] * 0.5 + ref_x
+
+    @staticmethod
+    def get_y(label, ref_y):
+        """ Return the y value of the ref/anchor relative to the canvas """
+        # Note the inversion of direction, as y values start at the top of
+        # the texture and increase downwards
+        return label.center_y + label.texture_size[1] * 0.5 - ref_y
+
+    def draw_backgrounds(self, dt):
+
+        label = self.label
+        label.canvas.remove_group('code_background')
+
+        print("MARKS")
+        # Draw a green surround around the refs. Note the sizes y inversion
+        for name, boxes in label.refs.items():
+
+            if 'code' in name:
+                for box in boxes:
+                    with label.canvas:
+                        Color(0, 0, 0, 0.15)
+                        Rectangle(pos=(self.get_x(label, box[0]),
+                                       self.get_y(label, box[1])),
+                                  size=(self.width - 32,
+                                        box[1] - box[3]), group='code_background')
+
            
 '''
     Combination of the text editor and renderer, I  write my notes in Markdown but the renderer is in reStructuredText

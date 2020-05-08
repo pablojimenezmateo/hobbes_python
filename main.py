@@ -178,6 +178,10 @@ def index_my_docs(db_path, dirname, clean=False):
     if not os.path.exists(os.path.join(db_path, dirname)):
 
         os.mkdir(os.path.join(db_path, dirname))
+        
+        # Do a clean indexing
+        clean_index(db_path, dirname)
+        return 
 
     if clean:
 

@@ -2,12 +2,27 @@ from src.gui.popup.info_popup import *
 from src.gui.popup.textinput_popup import *
 from src.gui.popup.confirmation_popup import *
 
+from kivy.uix.modalview import ModalView
+
 from markdown import markdown
+
+'''
+    Each of the options
+'''
+class ContextButton(Button):
+
+    def __init__(self, **kwargs):
+        super(ContextButton, self).__init__(**kwargs)
+
+        self.background_normal = ''
+        self.background_down = ''
+        self.background_color = (1, 1, 1, 1)
+        self.color = (0, 0, 0, 1)            # Text color
 
 '''
     Contextual menu for the note view
 '''
-class NoteViewContextMenu(Popup):
+class NoteViewContextMenu(ModalView):
 
     def __init__(self, **kwargs):
         super(NoteViewContextMenu, self).__init__(**kwargs)
@@ -17,10 +32,10 @@ class NoteViewContextMenu(Popup):
         self.context_menu = BoxLayout(orientation='vertical')
 
         # Create the options
-        rename_note_button   = Button(text="Rename note")
-        move_note_button     = Button(text="Move note")
-        delete_note_button   = Button(text="Delete note")
-        export_note_button   = Button(text="Export note to PDF")
+        rename_note_button   = ContextButton(text="Rename note")
+        move_note_button     = ContextButton(text="Move note")
+        delete_note_button   = ContextButton(text="Delete note")
+        export_note_button   = ContextButton(text="Export note to PDF")
         self.context_menu.add_widget(rename_note_button)
         self.context_menu.add_widget(move_note_button)
         self.context_menu.add_widget(delete_note_button)
@@ -32,7 +47,7 @@ class NoteViewContextMenu(Popup):
         delete_note_button.bind(on_release = self.delete_note_popup)
         export_note_button.bind(on_release = self.export_note_popup)
 
-        self.content = self.context_menu
+        self.add_widget(self.context_menu)
 
         self.current_note = None
 

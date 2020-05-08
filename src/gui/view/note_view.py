@@ -56,7 +56,7 @@ class NoteView(GridLayout):
         self.bind(minimum_height = self.setter('height'))
 
         # Context menu
-        self.context_menu = NoteViewContextMenu(size_hint=(.2, .2))
+        self.context_menu = NoteViewContextMenu(size_hint=(.2, .3))
 
     def add_notes(self, path):
 

@@ -41,21 +41,11 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 '''
     TODO:
 
+        - Fix contextual menus layout
         - Add option to export to pdf
         - Implement contextual menu options
         - Allow to create root folders if no folder exists
 
-        - FIX:
-
-             Traceback (most recent call last):
-               File "main.py", line 194, in <module>
-               File "kivy/app.py", line 829, in run
-               File "main.py", line 190, in build
-               File "main.py", line 95, in __init__
-               File "src/util/text_indexing_functions.py", line 28, in index_my_docs
-               File "src/util/text_indexing_functions.py", line 85, in incremental_index
-             UnboundLocalError: local variable 'indexed_path' referenced before assignment
-            [7284] Failed to execute script main
 '''
       
 '''

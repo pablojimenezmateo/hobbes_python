@@ -2,12 +2,29 @@ from src.gui.popup.info_popup import *
 from src.gui.popup.textinput_popup import *
 from src.gui.popup.confirmation_popup import *
 
+from kivy.uix.modalview import ModalView
+from kivy.graphics import Rectangle, Color
+from kivy.clock import Clock
+
 import os
+
+'''
+    Each of the options
+'''
+class ContextButton(Button):
+
+    def __init__(self, **kwargs):
+        super(ContextButton, self).__init__(**kwargs)
+
+        self.background_normal = ''
+        self.background_down = ''
+        self.background_color = (1, 1, 1, 1)
+        self.color = (0, 0, 0, 1)            # Text color
 
 '''
     Contextual menu for the folder view
 '''
-class FolderTreeViewContextMenu(Popup):
+class FolderTreeViewContextMenu(ModalView):
 
     def __init__(self, notes_view, tree_view, **kwargs):
         super(FolderTreeViewContextMenu, self).__init__(**kwargs)
@@ -19,15 +36,15 @@ class FolderTreeViewContextMenu(Popup):
         self.context_menu = BoxLayout(orientation='vertical')
 
         # Create the options
-        new_note_button   = Button(text="New note")
-        new_folder_button = Button(text="New folder")
-        rename_folder_button = Button(text="Rename folder")
-        new_root_folder_button = Button(text="New root folder")
+        new_note_button        = ContextButton(text="New note")
+        new_folder_button      = ContextButton(text="New folder")
+        rename_folder_button   = ContextButton(text="Rename folder")
+        new_root_folder_button = ContextButton(text="New root folder")
 
         # Special dialogues are needed for the following options
-        move_folder_button     = Button(text="Move folder")
-        export_folder_button   = Button(text="Export folder to PDF")
-        delete_folder_button   = Button(text="Delete folder")
+        move_folder_button     = ContextButton(text="Move folder")
+        export_folder_button   = ContextButton(text="Export folder to PDF")
+        delete_folder_button   = ContextButton(text="Delete folder")
 
         self.context_menu.add_widget(new_note_button)
         self.context_menu.add_widget(new_folder_button)
@@ -47,7 +64,7 @@ class FolderTreeViewContextMenu(Popup):
         export_folder_button.bind(on_release = self.export_folder_popup)
         delete_folder_button.bind(on_release = self.delete_folder_popup)
 
-        self.content = self.context_menu
+        self.add_widget(self.context_menu)
 
         self.current_folder = None
 

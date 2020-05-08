@@ -75,7 +75,7 @@ class FolderTreeView(TreeView):
         populate_tree(self, self.hobbes_db, self.path_dictionary)
 
         # Context menu
-        self.context_menu = FolderTreeViewContextMenu(size_hint=(.2, .2), notes_view=self.notes_view, tree_view=self)
+        self.context_menu = FolderTreeViewContextMenu(size_hint=(.3, .5), notes_view=self.notes_view, tree_view=self)
 
     # Refresh the tree view
     def rebuild_tree_view(self):

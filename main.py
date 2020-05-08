@@ -11,7 +11,6 @@ from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout 
-from kivy.uix.treeview import TreeView, TreeViewLabel
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
@@ -34,8 +33,11 @@ from src.util.text_indexing_functions import *
 from src.gui.popup.search_popup import *
 
 # Context menus
-from src.gui.context_menu.folder_context_menu import *
 from src.gui.context_menu.note_context_menu import *
+
+# Views
+from src.gui.view.folder_view import *
+from src.gui.view.note_view import *
 
 # Filesystem
 import os
@@ -92,184 +94,6 @@ def sorted_nicely(l):
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
     return sorted(l, key=alphanum_key)
 
-
-'''
-    This represents a folder on the treeview
-'''
-class FolderLabel(TreeViewLabel):
-
-    # I'm storing here the filesystem path of the folder
-    path = ''
-
-    def __init__(self, path='', **kwargs):
-        super(FolderLabel, self).__init__(**kwargs)
-
-        self.path = path
-
-'''
-    This function traverses a directory and adds the folders as children to
-    the given tree
-'''
-def populate_tree(tree, path, path_dictionary):
-
-    added = []
-
-    # Helper functions used to sort
-    convert = lambda text: int(text) if text.isdigit() else text 
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
-
-    for root, dirs, files in os.walk(path):
-
-        # Remove directories starting by .
-        dirs[:] = [d for d in dirs if not d[0] == '.']
-
-        # Alfabetical order
-        dirs.sort(key=alphanum_key)
-
-        level = root.replace(path, '').count(os.sep)
-
-        # Ignore the same folder
-
-        if root == path:
-            continue
-
-        # Add the rest of folders recursively
-        if level == 1:
-
-            added = []
-            added.append(tree.add_node(FolderLabel(text=os.path.basename(root), path=root)))
-
-            path_dictionary[root] = added[-1]
-        else:
-
-            added.append(tree.add_node(FolderLabel(text=os.path.basename(root), path=root), added[level-2]))
-
-            path_dictionary[root] = added[-1]
-
-'''
-    This is a custom Tree View to view the folders
-'''
-class FolderTreeView(TreeView):
-
-    # This is a quick way to find the tree node given the path
-    path_dictionary = {}
-
-    def __init__(self, notes_view,  **kwargs):
-        super(FolderTreeView, self).__init__(**kwargs)
-
-        self.hide_root=True
-        self.bind(minimum_height = self.setter('height'))
-
-        self.notes_view = notes_view
-
-        populate_tree(self, hobbes_db, self.path_dictionary)
-
-        # Context menu
-        self.context_menu = FolderTreeViewContextMenu(size_hint=(.2, .2))
-
-    def custom_event_handler(self, touch):
-
-        if touch.button != 'scrolldown' and touch.button != 'scrollup':
-
-            active_node = self.get_node_at_pos((touch.x, touch.y))
-            
-            if active_node != None:
-
-                self.notes_view.add_notes(active_node.path)
-
-                if touch.button == 'right' or touch.is_double_tap:
-
-                    self.context_menu.menu_opened(active_node)
-
-                    return True
-
-            # There is no node under the cursor
-            else:
-
-                print("Not a leaf")
-
-    def folder_opened_without_touch(self, node):
-
-        active_node = node
-        
-        if active_node != None:
-
-            self.notes_view.add_notes(active_node.path)
-
-'''
-    Each of the notes is represented by one button
-'''
-class NoteButton(Button):
-
-    def __init__(self, context_menu, note_view, path,  **kwargs):
-        super(NoteButton, self).__init__(**kwargs)
-
-        self.context_menu = context_menu
-        self.note_view = note_view
-        self.path = path
-        
-    def on_touch_down(self, touch):
-
-        if self.collide_point(touch.x, touch.y):
-
-            print("I have been touched ", self.text)
-
-            self.note_view.activate_note(self)
-
-            if touch.button == 'right' or touch.is_double_tap:
-
-                self.context_menu.menu_opened(self)
-
-            return super(NoteButton, self).on_touch_down(touch)
-
-'''
-    This is the column that shows notes
-'''
-class NoteView(GridLayout):
-
-    # Store the note path to use with the search function
-    path_dictionary = {}
-
-    def __init__(self, note_text_panel, **kwargs):
-
-        self.active_note = None
-        self.note_text_panel = note_text_panel
-
-        super(NoteView, self).__init__(**kwargs)
-
-        self.bind(minimum_height = self.setter('height'))
-
-        # Context menu
-        self.context_menu = NoteViewContextMenu(size_hint=(.2, .2))
-
-    def add_notes(self, path):
-
-        self.clear_widgets()
-        self.path_dictionary = {}
-
-        for file in sorted_nicely(os.listdir(path)):
-            if file.endswith(".txt"):
-
-                nb = NoteButton(context_menu=self.context_menu, note_view=self, text=file.split(".")[0], path=os.path.join(path, file), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left')
-                self.add_widget(nb)
-
-                self.path_dictionary[os.path.join(path, file)] = nb
-
-    '''
-        This function handles when a note has been activated
-    '''
-    def activate_note(self, note):
-
-        # Background logic
-        if self.active_note != None:
-
-            self.active_note.background_color = NOTE_VIEW_NOT_ACTIVE_NOTE_COLOR # Background color of note
-
-        note.background_color  = NOTE_VIEW_ACTIVE_NOTE_COLOR # Background color when selected
-        self.active_note = note
-
-        # Send note to text input
-        self.note_text_panel.load_note(self.active_note.path)
 
 '''
     This will be used to edit notes
@@ -717,7 +541,7 @@ class MainScreen(BoxLayout):
 
         # Folders view
         self.folder_tree_view_scroll = ScrollView(size_hint=(1, 1))
-        self.folder_tree_view = FolderTreeView(size_hint_y=None, notes_view=self.notes_view)
+        self.folder_tree_view = FolderTreeView(size_hint_y=None, notes_view=self.notes_view, hobbes_db=hobbes_db)
         self.folder_tree_view_scroll.add_widget(self.folder_tree_view, 1)
 
         # Add the tiny slider for the rain

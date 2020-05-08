@@ -64,7 +64,7 @@ class NoteView(GridLayout):
         self.path_dictionary = {}
 
         for file in sorted_nicely(os.listdir(path)):
-            if file.endswith(".txt"):
+            if file.endswith(".md"):
 
                 nb = NoteButton(context_menu=self.context_menu, note_view=self, text=file.split(".")[0], path=os.path.join(path, file), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left')
                 self.add_widget(nb)

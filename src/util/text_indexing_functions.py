@@ -42,7 +42,7 @@ def clean_index(db_path, dirname):
 def my_docs(db_path):
 
     # Get all the txt files from a given path
-    result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(db_path) for f in filenames if os.path.splitext(f)[1] == '.txt']
+    result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(db_path) for f in filenames if os.path.splitext(f)[1] == '.md']
     return result
 
 def get_schema():

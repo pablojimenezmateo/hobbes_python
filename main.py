@@ -7,21 +7,11 @@ Config.set('kivy', 'exit_on_escape', '0')
 Config.set('graphics', 'maxfps', '30')
 
 from kivy.app import App
-from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.floatlayout import FloatLayout 
-from kivy.uix.button import Button
-from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
-from kivy.graphics import Rectangle, Color
-from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
-from kivy.uix.rst import RstDocument
 from kivy.clock import Clock
-from kivy.uix.dropdown import DropDown
-from kivy.uix.modalview import ModalView
 
 # Local imports
 from src.util.git_functions import *
@@ -40,25 +30,12 @@ from src.gui.note_panel.note_panel import *
 # Music
 from src.gui.music_slider.music_slider import *
 
-
 # Filesystem
 import os
-import subprocess
-import platform
-
-# Used for natural sorting
-import re 
-
-
-# To export to PDF
-from markdown import markdown
-
-
 
 # Global definitions
 # This is the path where notes will be stored and read from
 hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
-
 
 '''
     TODO:
@@ -72,9 +49,6 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
         - When the app closes, save current note
 '''
       
-
-
-
 '''
     This is the Layout of the main screen of the application
 '''
@@ -87,7 +61,7 @@ class MainScreen(BoxLayout):
         self.orientation='horizontal'
 
         # Notes input panel
-        self.note_text_input = NoteTextPanel(size_hint=(.6, 1))
+        self.note_text_input = NoteTextPanel(size_hint=(.6, 1), hobbes_db=hobbes_db)
 
         # Notes view
         self.notes_view_scroll = ScrollView(size_hint=(.2, None))
@@ -199,7 +173,7 @@ class MainScreen(BoxLayout):
                 self.search_popup.clear_all()
                 self.search_popup.open()
 
-
+# Main app
 class HobbesApp(App):
 
     def build(self):
@@ -212,4 +186,5 @@ class HobbesApp(App):
         return MainScreen()
 
 if __name__ == '__main__':
+    
     HobbesApp().run()

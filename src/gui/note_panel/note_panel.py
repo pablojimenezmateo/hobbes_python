@@ -23,10 +23,11 @@ class NoteTextPanel(BoxLayout):
         # Possible view status: 0 = split, 1 = Note, 2 = renderer
         toggle_status = 0
 
-        def __init__(self, **kwargs):
+        def __init__(self, hobbes_db, **kwargs):
             super(NoteTextPanel, self).__init__(**kwargs)
 
             self.orientation = 'horizontal'
+            self.hobbes_db = hobbes_db
 
             self.note_text_input    = NoteTextInput(size_hint=(.5, 1), multiline=True)
             self.note_text_renderer = NoteTextRenderer(size_hint=(.5, None))
@@ -110,7 +111,7 @@ class NoteTextPanel(BoxLayout):
                 self.current_note_saved = True
 
                 # Reindex the note
-                reindex_one_note(hobbes_db, '.text_index', self.current_note)
+                reindex_one_note(self.hobbes_db, '.text_index', self.current_note)
 
         # Autosave function
         def autosave(self, dt):

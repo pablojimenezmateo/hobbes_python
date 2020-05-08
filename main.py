@@ -43,10 +43,6 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
         - Add option to export to pdf
         - Implement contextual menu options
 
-        - Renderer
-            - Finish attachments that are not images
-
-        - When the app closes, save current note
 '''
       
 '''
@@ -86,6 +82,9 @@ class MainScreen(BoxLayout):
 
         # Pay attention to keyboard events
         Window.bind(on_key_down=self.on_keyboard)
+
+        # Save current note when exiting
+        Window.bind(on_close=self.on_close)
 
         # Search popup
         self.search_popup = SearchPopup(size_hint=(None, None), size=(400, 0), folder_tree_view=self.folder_tree_view, notes_view=self.notes_view, hobbes_db=hobbes_db)
@@ -173,6 +172,11 @@ class MainScreen(BoxLayout):
                 self.search_popup.clear_all()
                 self.search_popup.open()
 
+    # Save the current note on exit
+    def on_close(self, args):
+
+        self.note_text_input.save_note()
+
 # Main app
 class HobbesApp(App):
 
@@ -186,5 +190,5 @@ class HobbesApp(App):
         return MainScreen()
 
 if __name__ == '__main__':
-    
+
     HobbesApp().run()

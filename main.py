@@ -30,7 +30,11 @@ from kivy.uix.image import Image
 from src.util.git_functions import *
 from src.util.text_indexing_functions import *
 
+# Popups
 from src.gui.popup.search_popup import *
+from src.gui.popup.info_popup import *
+from src.gui.popup.textinput_popup import *
+from src.gui.popup.confirmation_popup import *
 
 # Filesystem
 import os
@@ -81,11 +85,6 @@ NOTE_RENDERER_FONT_SIZE = 48
 '''
 
 
-
-
-
-
-
 """ Sort the given iterable in the way that humans expect.""" 
 def sorted_nicely(l): 
     convert = lambda text: int(text) if text.isdigit() else text 
@@ -93,84 +92,7 @@ def sorted_nicely(l):
     return sorted(l, key=alphanum_key)
 
 
-'''
-    Generic info popup
-'''
 
-class InfoPopup(Popup):
-
-    def __init__(self, message, **kwargs):
-
-        super(InfoPopup, self).__init__(**kwargs)
-
-        self.add_widget(Label(text=message))
-
-'''
-    Generic textinput popup
-'''
-class TextinputPopup(Popup):
-
-    def __init__(self, message, callback, **kwargs):
-
-        super(TextinputPopup, self).__init__(**kwargs)
-
-        layout = BoxLayout(orientation='vertical', size_hint=(1, 1))
-        layout.add_widget(Label(text=message, size_hint=(1, .5)), 1)
-        self.textinput = TextInput(text='', multiline=False, size_hint=(1, .5))
-
-        layout.add_widget(self.textinput, 0)
-
-        self.add_widget(layout)
-
-        self.textinput.bind(on_text_validate=self.my_callback)
-
-        self.callback = callback
-
-    def my_callback(self, textinput):
-
-        self.callback(self, textinput.text)
-
-    # Set the focus when opened
-    def on_open(self):
-
-        self.textinput.focus = True
-
-'''
-    Generic confirmation dialog
-'''
-class ConfirmPopup(Popup):
-
-    def __init__(self, message, callback, **kwargs):
-
-        super(ConfirmPopup, self).__init__(**kwargs)
-
-        layout_top = BoxLayout(orientation='vertical', size_hint=(1, .5))
-        layout_top.add_widget(Label(text=message, size_hint=(1, .5)), 1)
-
-        layout_bottom = BoxLayout(orientation='horizontal', size_hint=(1, .5))
-
-        self.confirm_button = Button(text='Confirm', size_hint=(.5, 1))
-        layout_bottom.add_widget(self.confirm_button)
-        self.cancel_button = Button(text='Cancel', size_hint=(.5, 1))
-        layout_bottom.add_widget(self.cancel_button)
-        layout_top.add_widget(layout_bottom)
-
-        self.add_widget(layout_top)
-
-        # If the cancel button is pressed, just close the popup
-        self.confirm_button.bind(on_release=self.my_callback)
-        self.cancel_button.bind(on_release=self.dismiss)
-
-        self.callback = callback
-
-    def my_callback(self, l):
-
-        self.callback(self)
-
-    # Set the focus when opened
-    def on_open(self):
-
-        self.confirm_button.focus = True
 
 '''
     Contextual menu for the folder view

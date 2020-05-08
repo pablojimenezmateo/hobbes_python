@@ -2,15 +2,19 @@ from src.gui.popup.info_popup import *
 from src.gui.popup.textinput_popup import *
 from src.gui.popup.confirmation_popup import *
 
+import os
+
 '''
     Contextual menu for the folder view
 '''
 class FolderTreeViewContextMenu(Popup):
 
-    def __init__(self, **kwargs):
+    def __init__(self, notes_view, tree_view, **kwargs):
         super(FolderTreeViewContextMenu, self).__init__(**kwargs)
 
         self.title = "Menu"
+        self.notes_view = notes_view
+        self.tree_view = tree_view
 
         self.context_menu = BoxLayout(orientation='vertical')
 
@@ -112,19 +116,45 @@ class FolderTreeViewContextMenu(Popup):
         confirm = ConfirmPopup(title="Delete folder", message="Are you sure you want to delete folder '%s'?" % self.current_folder.text, callback=self.delete_folder, size_hint=(.2, .2))
         confirm.open()
 
-
     '''
         Functions that actually do things
     '''
 
     def create_note(self, popup, text):
 
-        print("Creating note", text, " on folder ", self.current_folder.text)
+        if not os.path.isfile(os.path.join(self.current_folder.path, text + '.md')):
+
+            print("Creating ", os.path.join(self.current_folder.path, text + '.md'))
+            #print("Creating note", text, " on folder ", self.current_folder.path)
+
+            with open(os.path.join(self.current_folder.path, text) + '.md', 'w'):
+
+                pass
+
+            # Refresh so the newly created note appears
+            self.notes_view.add_notes(self.current_folder.path)
+        else:
+
+            info = InfoPopup(title="Create note", message="ERROR: File already exists", size_hint=(.3, .2))
+            info.open()
+
         popup.dismiss()
 
     def create_folder(self, popup, text):
 
-        print("Creating folder", text, " on folder ", self.current_folder.text)
+        if not os.path.isdir(os.path.join(self.current_folder.path, text)):
+
+            print("Creating ", os.path.join(self.current_folder.path, text))
+
+            os.mkdir(os.path.join(self.current_folder.path, text))
+
+            # Refresh so the newly created note appears
+            self.tree_view.rebuild_tree_view()
+        else:
+
+            info = InfoPopup(title="Create folder", message="ERROR: Folder already exists", size_hint=(.3, .2))
+            info.open()
+
         popup.dismiss()
 
 
@@ -153,6 +183,8 @@ class FolderTreeViewContextMenu(Popup):
             popup.dismiss()
 
     def delete_folder(self, popup):
+
+        # IMPORTANT: Set self.tree_view.active_node = None
 
         if self.current_folder != None:
 

@@ -40,6 +40,8 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 '''
     TODO:
 
+        - THE FOLDER WAS NOT BEING CREATED ON THE CORRECT PATH, THE PATH FOR THE NEW BUTTON WAS NOT UPDATED CORRECTLY (?)
+
         - Add option to export to pdf
         - Implement contextual menu options
 

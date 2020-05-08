@@ -20,7 +20,6 @@ from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.uix.rst import RstDocument
 from kivy.clock import Clock
-from kivy.uix.slider import Slider
 from kivy.uix.dropdown import DropDown
 from kivy.uix.modalview import ModalView
 
@@ -38,6 +37,10 @@ from src.gui.view.note_view import *
 # Text panel
 from src.gui.note_panel.note_panel import *
 
+# Music
+from src.gui.music_slider.music_slider import *
+
+
 # Filesystem
 import os
 import subprocess
@@ -46,26 +49,15 @@ import platform
 # Used for natural sorting
 import re 
 
-# For audio playing
-from pygame import mixer
-
-
 
 # To export to PDF
 from markdown import markdown
 
-# To open URLs when clicked 
-import webbrowser
+
 
 # Global definitions
 # This is the path where notes will be stored and read from
 hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
-
-
-
-
-
-
 
 
 '''
@@ -79,39 +71,9 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 
         - When the app closes, save current note
 '''
+      
 
 
-
-
-
-           
-
-class MusicSlider(Slider):
-
-    def __init__(self, **kwargs):
-        super(MusicSlider, self).__init__(**kwargs)
-
-        # Audio
-        mixer.init()
-        mixer.set_num_channels(1)
-        self.rain = mixer.Sound("media/audio/rain.ogg")
-
-    def on_touch_up(self, touch):
-
-        if self.value > 0:
-
-            # If the sound is not playing, start it
-            if not mixer.get_busy():
-
-                self.rain.play(loops=-1)
-
-            self.rain.set_volume(self.value)
-
-        else:
-
-            self.rain.fadeout(2000)    
-
-        return True
 
 '''
     This is the Layout of the main screen of the application

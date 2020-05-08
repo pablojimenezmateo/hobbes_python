@@ -26,11 +26,11 @@ from kivy.uix.dropdown import DropDown
 from kivy.uix.modalview import ModalView
 from kivy.uix.image import Image
 
-# For online sync
-from git import Repo, exc
-import datetime
-import socket
-import threading
+# Local imports
+from src.util.git_functions import *
+from src.util.text_indexing_functions import *
+
+from src.gui.popup.search_popup import *
 
 # Filesystem
 import os
@@ -42,12 +42,6 @@ import re
 
 # For audio playing
 from pygame import mixer
-
-# For text indexing
-from whoosh import index
-from whoosh.fields import Schema, ID, TEXT, DATETIME
-from whoosh.qparser import MultifieldParser
-import datetime
 
 # For the attachments
 import hashlib
@@ -63,9 +57,7 @@ import webbrowser
 # This is the path where notes will be stored and read from
 hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 
-# Colors
-SEARCH_POPUP_BACKGROUND_COLOR = (0, 0, 0, 0)
-SEARCH_BUTTON_TEXT_COLOR = (0, 0, 0, 1)
+
 NOTE_VIEW_NOT_ACTIVE_NOTE_COLOR = (1, 1, 1, 1)
 NOTE_VIEW_ACTIVE_NOTE_COLOR = (1, 1, 1, 0.5)
 
@@ -88,342 +80,10 @@ NOTE_RENDERER_FONT_SIZE = 48
         - When the app closes, save current note
 '''
 
-'''
-    GIT on a new thread
-'''
-def git_commit_and_push_threaded(path):
 
-    t = threading.Thread(daemon=True, target=git_commit_and_push, args=[path])
-    t.start()
 
-def git_commit_threaded(path):
 
-    t = threading.Thread(daemon=True, target=git_commit, args=[path])
-    t.start()
 
-def git_commit(path):
-
-    # Check if git is already present on the given repo
-    try:
-
-        repo = Repo(path)
-
-    except exc.InvalidGitRepositoryError:
-
-        print("Creating repo")
-
-        repo = Repo.init(path)
-
-        # Add new changes
-        repo.git.add('--all')
-        date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        device_name = socket.gethostname()
-        repo.index.commit('Changes: ' + date + ' Device: ' + device_name)
-
-'''
-    Given a folder, if there is no .git create it
-    Then commit the changes, if origin is set up
-    pull then push
-'''
-def git_commit_and_push(path):
-
-        # Check if git is already present on the given repo
-        try:
-
-            repo = Repo(path)
-
-        except exc.InvalidGitRepositoryError:
-
-            print("Creating repo")
-
-            repo = Repo.init(path)
-
-        # Check if the git has a remote configured
-        git_is_local = True
-
-        try:
-            repo.git.checkout('master')
-            git_is_local = False
-
-        except exc.GitCommandError:
-            git_is_local = True
-            git_commit(path)
-
-        # If there is a remote configured do a pull
-        if not git_is_local:
-
-            print("Not local, remote configured")
-
-            origin = repo.remote(name='origin')
-
-            # Pull any changes
-            try:
-                origin.pull()
-
-            except exc.GitCommandError:
-
-                print("Either not internet or origin is not well configured")
-
-            git_commit(path)
-
-            # Push everything
-            try:
-                origin.push()
-
-            except exc.GitCommandError:
-
-                print("Either not internet or origin is not well configured")
-
-'''
-    From the Whoosh docs, incremental indexing of the files
-'''
-def index_my_docs(db_path, dirname, clean=False):
-
-    # If the index folder does not exist create it
-    if not os.path.exists(os.path.join(db_path, dirname)):
-
-        os.mkdir(os.path.join(db_path, dirname))
-        
-        # Do a clean indexing
-        clean_index(db_path, dirname)
-        return 
-
-    if clean:
-
-        clean_index(db_path, dirname)
-    else:
-
-        incremental_index(db_path, dirname)
-
-def clean_index(db_path, dirname):
-    # Always create the index from scratch
-    ix = index.create_in(os.path.join(db_path, dirname), schema=get_schema())
-    writer = ix.writer()
-
-    # Assume we have a function that gathers the filenames of the
-    # documents to be indexed
-    for path in my_docs(db_path):
-        add_doc(writer, path)
-
-    writer.commit()
-
-def my_docs(db_path):
-
-    # Get all the txt files from a given path
-    result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(db_path) for f in filenames if os.path.splitext(f)[1] == '.txt']
-    return result
-
-def get_schema():
-
-    return Schema(path=ID(unique=True, stored=True), title=TEXT(stored=True), time=DATETIME(stored=True), content=TEXT)
-
-def add_doc(writer, path):
-
-    fileobj = open(path, "rb")
-    content = fileobj.read()
-    fileobj.close()
-    title = os.path.basename(path).split(".")[0]
-
-    # The last time the file was modified
-    mtime = os.path.getmtime(path)
-
-    # Convert seconds since epoch to readable timestamp
-    modification_time = datetime.datetime.fromtimestamp(mtime)
-
-    writer.add_document(path=path, content=content.decode("utf-8", "strict"), title=title, time=modification_time)
-
-def incremental_index(db_path, dirname):
-
-    ix = index.open_dir(os.path.join(db_path, dirname))
-
-    # The set of all paths in the index
-    indexed_paths = set()
-
-    # The set of all paths we need to re-index
-    to_index = set()
-
-    with ix.searcher() as searcher:
-        writer = ix.writer()
-
-        # Loop over the stored fields in the index
-        for fields in searcher.all_stored_fields():
-            indexed_path = fields['path']
-            indexed_paths.add(indexed_path)
-
-        if not os.path.exists(indexed_path):
-            # This file was deleted since it was indexed
-            writer.delete_by_term('path', indexed_path)
-
-        else:
-            # Check if this file was changed since it
-            # was indexed
-            indexed_time = fields['time']
-            mtime = os.path.getmtime(indexed_path)
-            modification_time = datetime.datetime.fromtimestamp(mtime)
-
-            if modification_time > indexed_time:
-                # The file has changed, delete it and add it to the list of
-                # files to reindex
-                writer.delete_by_term('path', indexed_path)
-                to_index.add(indexed_path)
-
-        # Loop over the files in the filesystem
-        # Assume we have a function that gathers the filenames of the
-        # documents to be indexed
-        for path in my_docs(db_path):
-            if path in to_index or path not in indexed_paths:
-                # This is either a file that's changed, or a new file
-                # that wasn't indexed before. So index it!
-                add_doc(writer, path)
-
-        writer.commit()
-
-# Reindexes only one file, useful when saving a note
-def reindex_one_note(db_path, dirname, note_path):
-
-    ix = index.open_dir(os.path.join(db_path, dirname))
-
-    with ix.searcher() as searcher:
-
-        writer = ix.writer()
-        writer.delete_by_term('path', note_path)
-        add_doc(writer, note_path)
-
-        writer.commit()
-
-'''
-    SearchButton
-'''
-class SearchButton(Button):
-
-    def __init__(self, path, **kwargs):
-        super(SearchButton, self).__init__(**kwargs)
-
-        self.path = path
-
-'''
-    Search popup
-'''
-class SearchPopup(ModalView):
-
-    def __init__(self, folder_tree_view, notes_view, **kwargs):
-
-        super(SearchPopup, self).__init__(**kwargs)
-
-        self.folder_tree_view = folder_tree_view
-        self.notes_view = notes_view
-
-        # Remove background
-        self.background = 'media/images/transparent.png'
-        self.background_color = SEARCH_POPUP_BACKGROUND_COLOR
-
-        # To check if it is active
-        self.active = False
-        self.bind(on_open=self.toggle_active)
-        self.bind(on_dismiss=self.toggle_active)
-
-        # Put it at the top
-        self.pos_hint = {'top': 0.9}
-
-        # The buttons will be added to a BoxLayout
-        self.layout = BoxLayout(orientation='vertical', size_hint=(1, 1))
-        self.textinput = TextInput(text='', multiline=False, size_hint=(1, None), size=(0, 30))
-        self.layout.add_widget(self.textinput)
-
-        self.add_widget(self.layout)
-
-        # Search when enter is pressed
-        self.textinput.bind(on_text_validate=self.do_search)
-
-        self.buttons = []
-
-    def toggle_active(self, args):
-
-        self.active = not self.active
-
-    def clear_all(self):
-
-        self.dismiss()
-        self.textinput.text=''
-        self.clear_results()
-
-    def clear_results(self):
-
-        for btn in self.buttons:
-
-            self.layout.remove_widget(btn)
-
-        self.buttons = []
-
-    def do_search(self, textinput):
-
-        self.clear_results()
-
-        # Create the searcher
-        ix = index.open_dir(os.path.join(hobbes_db, '.text_index'))
-
-        with ix.searcher() as searcher:
-
-            parser = MultifieldParser(["title", "content"], schema=ix.schema)
-
-            query = parser.parse(textinput.text)
-            results = searcher.search(query, terms=True, limit=None)
-
-            for hit in results:
-
-                beautiful_path = hit['path'].replace(hobbes_db, '')
-                beautiful_path = '>'.join(beautiful_path.split(os.sep)[1:-1]) + '>' + hit['title']
-
-                btn = SearchButton(text=beautiful_path, path=hit['path'], color=SEARCH_BUTTON_TEXT_COLOR)
-                self.layout.add_widget(btn)
-
-                self.buttons.append(btn)
-
-            # We move the layout downward, since appending buttons makes it move upward
-            self.layout.pos = (self.layout.x, self.layout.y - 30 * len(results))
-
-    def on_touch_down(self, touch):
-
-        for btn in self.buttons:
-
-            if btn.collide_point(touch.x, touch.y) and touch.button == 'left':
-
-                tree_node = self.folder_tree_view.path_dictionary[os.path.dirname(btn.path)]
-
-                # Find the tree path until this node
-                traversed_tree = []
-                traversed_tree.append(tree_node)
-                parent_node = tree_node.parent_node
-
-                while parent_node != self.folder_tree_view.root:
-
-                    traversed_tree.insert(0, parent_node)
-                    parent_node = parent_node.parent_node
-
-                # Open the nodes until the selected node
-                for t in traversed_tree:
-
-                    if not t.is_open:
-
-                        self.folder_tree_view.toggle_node(t)
-
-                # And select the node
-                self.folder_tree_view.select_node(tree_node)
-
-                # Load the notes
-                self.folder_tree_view.folder_opened_without_touch(tree_node)
-
-                # Open the note
-                self.notes_view.activate_note(self.notes_view.path_dictionary[btn.path])
-                break
-
-        return super(SearchPopup, self).on_touch_down(touch)
-
-
-    # Set the focus when opened
-    def on_open(self):
-
-        self.textinput.focus = True
 
 
 """ Sort the given iterable in the way that humans expect.""" 
@@ -1407,7 +1067,7 @@ class MainScreen(BoxLayout):
         Window.bind(on_key_down=self.on_keyboard)
 
         # Search popup
-        self.search_popup = SearchPopup(size_hint=(None, None), size=(400, 0), folder_tree_view=self.folder_tree_view, notes_view=self.notes_view)
+        self.search_popup = SearchPopup(size_hint=(None, None), size=(400, 0), folder_tree_view=self.folder_tree_view, notes_view=self.notes_view, hobbes_db=hobbes_db)
 
         '''
             Indexing new files

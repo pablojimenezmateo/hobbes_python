@@ -26,7 +26,6 @@ from kivy.uix.dropdown import DropDown
 from kivy.uix.modalview import ModalView
 from kivy.uix.image import Image
 
-
 # For online sync
 from git import Repo, exc
 import datetime
@@ -54,7 +53,6 @@ from shutil import copyfile
 
 # To translate markdown to bbcode
 from markdown import markdown
-from html2bbcode.parser import HTML2BBCode
 
 # Global definitions
 # This is the path where notes will be stored and read from

@@ -77,10 +77,19 @@ def incremental_index(db_path, dirname):
     with ix.searcher() as searcher:
         writer = ix.writer()
 
+        indexed_path = None
+
         # Loop over the stored fields in the index
         for fields in searcher.all_stored_fields():
             indexed_path = fields['path']
             indexed_paths.add(indexed_path)
+
+        # There is nothing, clean reindex just in case
+        if indexed_path == None:
+
+            index_my_docs(db_path, dirname, True)
+
+            return
 
         if not os.path.exists(indexed_path):
             # This file was deleted since it was indexed

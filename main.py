@@ -5,6 +5,7 @@ from kivy.config import Config
 # By default kivy exits when Esc is pressed, overwrite it
 Config.set('kivy', 'exit_on_escape', '0')
 Config.set('graphics', 'maxfps', '30')
+Config.set('kivy','window_icon','media/images/icon.png')
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout

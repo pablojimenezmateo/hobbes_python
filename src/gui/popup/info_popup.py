@@ -1,7 +1,6 @@
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 
-
 '''
     Generic info popup
 '''

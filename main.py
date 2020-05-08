@@ -34,6 +34,8 @@ import threading
 
 # Filesystem
 import os
+import subprocess
+import platform
 
 # Used for natural sorting
 import re 
@@ -81,9 +83,9 @@ NOTE_RENDERER_FONT_SIZE = 48
         - Implement contextual menu options
 
         - Renderer
-            - Copy the code from a rendered code block when clicked (?)
-            - Open links
             - Finish attachments that are not images
+
+        - When the app closes, save current note
 '''
 
 '''
@@ -983,7 +985,11 @@ class NoteTextRenderer(ScrollView):
 
         self.original_text = ''
 
+        self.current_note_path = ''
+
     def on_new_note_open(self, current_note_path, text):
+
+        self.current_note_path = current_note_path
 
         for path, w in self.images.items():
 
@@ -995,11 +1001,14 @@ class NoteTextRenderer(ScrollView):
 
         self.set_text(current_note_path, text)
 
+
     def set_text(self, current_note_path, text):
 
         self.original_text = text
 
         self.images_need_rerender = True
+
+        self.current_note_path = current_note_path
 
         # First parse the text for links
         link_re = re.compile(r'^!?\[(local[^\]]+)\]\(([^)]+)\)$', flags=re.MULTILINE)
@@ -1035,9 +1044,8 @@ class NoteTextRenderer(ScrollView):
             self.label.text = self.original_text
             self.is_new_note = False
 
-
+    # This function handles when a [ref] is clicked
     def reference_click(self, instance, value):
-
 
         # Check if text is valid URL (https://stackoverflow.com/questions/7160737/python-how-to-validate-a-url-in-python-malformed-or-not)
         url_regex = re.compile(
@@ -1052,6 +1060,24 @@ class NoteTextRenderer(ScrollView):
 
             webbrowser.open(value)
             return
+
+        # It is a file
+        if 'code_block_hobbes' not in value:
+
+            # Get the absolute path of the attachment from the relative path
+            saved_path = os.getcwd()
+            os.chdir(os.path.split(self.current_note_path)[0]) 
+            abs_attachment_path = os.path.abspath(value)
+            os.chdir(saved_path)
+            
+            if platform.system() == 'Darwin':       # macOS
+
+                subprocess.call(('open', abs_attachment_path))
+            elif platform.system() == 'Windows':    # Windows
+
+                os.startfile(abs_attachment_path)
+            else:                                   # linux variants
+                subprocess.call(('xdg-open', abs_attachment_path))
 
     def render_images(self, dt):
 
@@ -1083,7 +1109,7 @@ class NoteTextRenderer(ScrollView):
 
             # Partial translation to kivy Markdown
             # Code blocks
-            aux_text = re.sub(r'\`{3}(\s*[a-z]*\s*)([^\`]+)\`{3}', "[ref=code][font=media/fonts/FiraCode-Regular.ttf]\\2[/font][/ref]", aux_text)
+            aux_text = re.sub(r'\`{3}(\s*[a-z]*\s*)([^\`]+)\`{3}', "[ref=code_block_hobbes][font=media/fonts/FiraCode-Regular.ttf]\\2[/font][/ref]", aux_text)
 
             # Links
             aux_text = re.sub(r"\[(.*?)\]\((.*?)\)", "[u][color=#0000EE][ref=\\2]\\1[/ref][/color][/u]", aux_text)
@@ -1136,7 +1162,7 @@ class NoteTextRenderer(ScrollView):
         # Draw a green surround around the refs. Note the sizes y inversion
         for name, boxes in label.refs.items():
 
-            if 'code' in name:
+            if 'code_block_hobbes' in name:
                 for box in boxes:
                     with label.canvas:
                         Color(0, 0, 0, 0.15)
@@ -1236,7 +1262,6 @@ class NoteTextPanel(BoxLayout):
             # Make sure the scroll is on top
             self.note_text_input.cursor = (0, 0)
 
-
         # Saves the contents of the current editor to the current note
         def save_note(self):
 
@@ -1288,6 +1313,7 @@ class NoteTextPanel(BoxLayout):
                     os.mkdir(dst_path)
 
                 extension = os.path.basename(file_path.decode("utf-8", "strict")).split(".")[1]
+                old_name = os.path.basename(file_path.decode("utf-8", "strict"))
                 new_name = file_hash.hexdigest() + '.' + extension
 
                 is_image = False
@@ -1312,7 +1338,7 @@ class NoteTextPanel(BoxLayout):
                     self.note_text_input.insert_text('![local_image](' + os.path.join(relative_path, new_name) + ')')
                 else:
 
-                    self.note_text_input.insert_text('[local_file](' + os.path.join(relative_path, new_name) + ')')
+                    self.note_text_input.insert_text('[file: ' + old_name + '](' + os.path.join(relative_path, new_name) + ')')
 
 
 class MusicSlider(Slider):

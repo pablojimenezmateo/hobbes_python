@@ -1454,6 +1454,12 @@ class MainScreen(BoxLayout):
 class HobbesApp(App):
 
     def build(self):
+
+        # Create the db folder if it does not exist
+        if not os.path.exists(hobbes_db):
+
+            os.mkdir(hobbes_db)
+
         return MainScreen()
 
 if __name__ == '__main__':

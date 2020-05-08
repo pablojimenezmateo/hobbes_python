@@ -1,25 +1,11 @@
 from src.gui.popup.info_popup import *
 from src.gui.popup.textinput_popup import *
 from src.gui.popup.confirmation_popup import *
+from src.gui.context_menu.context_button import *
 
 from kivy.uix.modalview import ModalView
-from kivy.graphics import Rectangle, Color
-from kivy.clock import Clock
 
 import os
-
-'''
-    Each of the options
-'''
-class ContextButton(Button):
-
-    def __init__(self, **kwargs):
-        super(ContextButton, self).__init__(**kwargs)
-
-        self.background_normal = ''
-        self.background_down = ''
-        self.background_color = (1, 1, 1, 1)
-        self.color = (0, 0, 0, 1)            # Text color
 
 '''
     Contextual menu for the folder view

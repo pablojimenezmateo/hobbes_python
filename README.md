@@ -46,7 +46,13 @@ pip install -r requirements.txt
 pip install pyinstaller
 
 # Build
-pyinstaller main.py
+pyinstaller main.spec
+
+# Bundle all on one folder
+cp -r dist/main/* build/main/*
+
+# Run
+build/main/main
 ```
 
 The package will be under build/main

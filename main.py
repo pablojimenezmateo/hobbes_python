@@ -51,8 +51,11 @@ import datetime
 import hashlib
 from shutil import copyfile
 
-# To translate markdown to bbcode
+# To export to PDF
 from markdown import markdown
+
+# To open URLs when clicked 
+import webbrowser
 
 # Global definitions
 # This is the path where notes will be stored and read from
@@ -74,11 +77,13 @@ NOTE_RENDERER_FONT_SIZE = 48
 '''
     TODO:
 
-        - Change restructuredText with https://kivy.org/doc/stable/api-kivy.core.text.markup.html
-        - Pygments seems to have markdown to bbcode https://pygments.org/docs/formatters/
-        - Fix images/attachments relative paths, that can be done when converting Markdown -> reStructuredText, just append the hobbes_db path
         - Add option to export to pdf
         - Implement contextual menu options
+
+        - Renderer
+            - Copy the code from a rendered code block when clicked (?)
+            - Open links
+            - Finish attachments that are not images
 '''
 
 '''
@@ -1033,8 +1038,20 @@ class NoteTextRenderer(ScrollView):
 
     def reference_click(self, instance, value):
 
-        print("Reference clicked: ", value)
 
+        # Check if text is valid URL (https://stackoverflow.com/questions/7160737/python-how-to-validate-a-url-in-python-malformed-or-not)
+        url_regex = re.compile(
+            r'^(?:http|ftp)s?://' # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+            r'localhost|' #localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+            r'(?::\d+)?' # optional port
+            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+        if re.match(url_regex, value) is not None:
+
+            webbrowser.open(value)
+            return
 
     def render_images(self, dt):
 
@@ -1045,8 +1062,6 @@ class NoteTextRenderer(ScrollView):
             self.prev_width = self.width
 
         if self.images_need_rerender:
-
-            print("Render", self.width)
 
             self.images_need_rerender = False
 
@@ -1118,7 +1133,6 @@ class NoteTextRenderer(ScrollView):
         label = self.label
         label.canvas.remove_group('code_background')
 
-        print("MARKS")
         # Draw a green surround around the refs. Note the sizes y inversion
         for name, boxes in label.refs.items():
 

@@ -2,6 +2,8 @@ from src.gui.popup.info_popup import *
 from src.gui.popup.textinput_popup import *
 from src.gui.popup.confirmation_popup import *
 
+from markdown import markdown
+
 '''
     Contextual menu for the note view
 '''
@@ -72,11 +74,15 @@ class NoteViewContextMenu(Popup):
 
     def rename_note(self, *l):
 
+        # Here I need to check all the notes and fix their relative paths to the attachments
+
         if self.current_note != None:
 
             print("Rename note", self.current_note.text)
 
     def move_note(self, *l):
+
+        # Here I need to check all the notes and fix their relative paths to the attachments
 
         if self.current_note != None:
 

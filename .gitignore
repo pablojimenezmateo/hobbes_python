@@ -4,4 +4,7 @@ db/**
 bin
 jdk-*
 tests
-
+__pycache__
+build
+*.spec
+dist/

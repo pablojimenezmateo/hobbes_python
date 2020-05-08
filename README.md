@@ -16,8 +16,9 @@ My own notetaking application.
 
 ## Dependencies
 
+```
 sudo apt-get install xclip xsel
-
+```
 
 ## How to configure remote git
 
@@ -31,29 +32,24 @@ git push -u origin master
 You should also have the SSH keys correctly configured
 
 ## How to build
-Activate environment:
+
+```
+python -m pip install --upgrade --user pip setuptools virtualenv
+
+# Activate environment:
 
 source ~/kivy_venv/bin/activate
 
-# Buildozer build
+# Install dependencies
+pip install -r requirements.txt
 
-For this to work we need jdk-10, but we need the file jdk-10/lib/security/cacerts from jdk-14, I just copied it
+pip install pyinstaller
 
-export PATH=/home/gef/Documents/Hobbes-many/kivy/jdk-10/bin/:$PATH
+# Build
+pyinstaller main.py
+```
 
-I also had to install build-tools as well as the android API 27 manually:
-
-cd .buildozer/android/platform/android-sdk/tools/bin
-./sdkmanager "build-tools;27.0.0"
-./sdkmanager  "platform-tools" "platforms;android-27"
-
-buildozer android debug deploy run
-
-With:
-
-buildozer serve
-
-You can download the apk on your device
+The package will be under build/main
 
 ## Rain sound
 Downloaded from https://freetousesounds.bandcamp.com/album/city-rain-sounds-empty-streets-relaxing-sound-effects and adapted to a perfect loop using Audacity.

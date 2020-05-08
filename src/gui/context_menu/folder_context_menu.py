@@ -119,13 +119,9 @@ class FolderTreeViewContextMenu(Popup):
     '''
         Functions that actually do things
     '''
-
     def create_note(self, popup, text):
 
         if not os.path.isfile(os.path.join(self.current_folder.path, text + '.md')):
-
-            print("Creating ", os.path.join(self.current_folder.path, text + '.md'))
-            #print("Creating note", text, " on folder ", self.current_folder.path)
 
             with open(os.path.join(self.current_folder.path, text) + '.md', 'w'):
 
@@ -144,8 +140,6 @@ class FolderTreeViewContextMenu(Popup):
 
         if not os.path.isdir(os.path.join(self.current_folder.path, text)):
 
-            print("Creating ", os.path.join(self.current_folder.path, text))
-
             os.mkdir(os.path.join(self.current_folder.path, text))
 
             # Refresh so the newly created note appears
@@ -157,18 +151,31 @@ class FolderTreeViewContextMenu(Popup):
 
         popup.dismiss()
 
-
     def create_root_folder(self, popup, text):
 
-        print("Creating root folder", text)
+        if not os.path.isdir(os.path.join(self.tree_view.hobbes_db, text)):
+
+            os.mkdir(os.path.join(self.tree_view.hobbes_db, text))
+
+            # Refresh so the newly created note appears
+            self.tree_view.rebuild_tree_view()
+        else:
+
+            info = InfoPopup(title="Create root folder", message="ERROR: Folder already exists", size_hint=(.3, .2))
+            info.open()
+
         popup.dismiss()
 
     def rename_folder(self, popup, text):
+
+        # Here I need to check all the notes and fix their relative paths to the attachments
 
         print("Renaming folder %s to %s" % (self.current_folder.text, text))
         popup.dismiss()
 
     def move_folder(self, popup):
+
+        # Here I need to check all the notes and fix their relative paths to the attachments
 
         if self.current_folder != None:
 

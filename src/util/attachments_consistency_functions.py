@@ -75,3 +75,19 @@ def fix_note_consistency(old_path, new_path, hobbes_db):
         with open(old_path, "w") as f:
 
            f.write(new_text)
+
+# Function that finds all notes inside a folder and calls the 
+# fix_note_consistency function accoredingly
+def fix_folder_consistency(old_path, new_path, hobbes_db):
+
+    new_absolute_path = os.path.join(new_path, os.path.split(old_path)[-1])
+
+    # FInd all notes
+    for path, dirs, files in os.walk(old_path):
+        for filename in fnmatch.filter(files, "*.md"):
+
+            old_note_path = os.path.join(path, filename)
+            new_note_path = old_note_path.replace(old_path, new_absolute_path)
+
+            # Fix the consistency of each note
+            fix_note_consistency(old_note_path, new_note_path, hobbes_db)

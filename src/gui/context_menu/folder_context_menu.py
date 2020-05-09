@@ -2,6 +2,7 @@ from src.gui.popup.info_popup import *
 from src.gui.popup.textinput_popup import *
 from src.gui.popup.confirmation_popup import *
 from src.gui.context_menu.context_button import *
+from src.util.attachments_consistency_functions import *
 
 from kivy.uix.modalview import ModalView
 
@@ -99,6 +100,10 @@ class FolderTreeViewContextMenu(ModalView):
     '''
     def move_folder_popup(self, *l):
 
+        # Allow to pick where the folder goes
+        # Check that the path is valid
+        # Check that there is not a folder with that name already
+        self.move_folder()
         self.dismiss()
 
         # If the user clicks on another folder, the folder moves there
@@ -176,14 +181,13 @@ class FolderTreeViewContextMenu(ModalView):
         print("Renaming folder %s to %s" % (self.current_folder.text, text))
         popup.dismiss()
 
-    def move_folder(self, popup):
+    def move_folder(self):
 
         # Here I need to check all the notes and fix their relative paths to the attachments
-
         if self.current_folder != None:
 
+            #fix_folder_consistency(self.current_folder.path, '/home/gef/Documents/Hobbes-many/hobbes_debug/hobbes_python/db/Work/IMDEA/', self.tree_view.hobbes_db)
             print("Moving folder", self.current_folder.text)
-            popup.dismiss()
 
     def export_folder(self, popup):
 

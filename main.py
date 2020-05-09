@@ -8,7 +8,7 @@ Config.set('graphics', 'maxfps', '30')
 Config.set('kivy','window_icon','media/images/icon.png')
 
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
+from src.gui.context_menu.context_button import *
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
@@ -41,7 +41,18 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 '''
     TODO:
 
-        - Fix contextual menus layout
+        - When [moving a note, moving a folder] fix relative paths of attachments
+
+            - [Moving a note] Check that note text and fix path
+                - If it has been moved between root folders, copy the attachments to the other root folder
+            - [Moving a folder] Check all the notes on that directory and subdirectories
+                - If it has been moved between root folders, copy the attachments to the other root folder
+
+            - File example:   [file: Iaia_manual.pdf](../.attachments/cc304c8db3e8f4d190ed6aba143e99c0ed0e3c70df79d3305b1e40c43ce80285.pdf)
+            - Image example: ![local_image](../.attachments/77b9196aff91bb1a99484c40237870a239d31a0d168d43413588e300270ba272.png)
+
+
+        - Fix popup layouts
         - Add option to export to pdf
         - Implement contextual menu options
         - Allow to create root folders if no folder exists
@@ -64,7 +75,7 @@ class MainScreen(BoxLayout):
 
         # Notes view
         self.notes_view_scroll = ScrollView(size_hint=(.2, None))
-        self.notes_view = NoteView(note_text_panel=self.note_text_input, cols=1, size_hint=(1, None))
+        self.notes_view = NoteView(note_text_panel=self.note_text_input, cols=1, size_hint=(1, None), hobbes_db=hobbes_db)
         self.notes_view_scroll.add_widget(self.notes_view, 0)
 
         # Folders view

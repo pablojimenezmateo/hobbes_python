@@ -2,6 +2,7 @@ from src.gui.popup.info_popup import *
 from src.gui.popup.textinput_popup import *
 from src.gui.popup.confirmation_popup import *
 from src.gui.context_menu.context_button import *
+from src.util.attachments_consistency_functions import *
 
 from kivy.uix.modalview import ModalView
 
@@ -12,9 +13,11 @@ from markdown import markdown
 '''
 class NoteViewContextMenu(ModalView):
 
-    def __init__(self, **kwargs):
+    def __init__(self, hobbes_db, note_view, **kwargs):
         super(NoteViewContextMenu, self).__init__(**kwargs)
 
+        self.hobbes_db = hobbes_db
+        self.note_view = note_view
         self.title = "Menu"
 
         self.context_menu = BoxLayout(orientation='vertical')
@@ -59,7 +62,12 @@ class NoteViewContextMenu(ModalView):
     def move_note_popup(self, *l):
 
         if self.current_note != None:
+
+            # Allow to pick where the note goes
+            # Check that the path is valid
+            # Check that there is not a note with that name already
             self.dismiss()
+            self.move_note()
 
     def delete_note_popup(self, *l):
 
@@ -86,10 +94,18 @@ class NoteViewContextMenu(ModalView):
     def move_note(self, *l):
 
         # Here I need to check all the notes and fix their relative paths to the attachments
-
         if self.current_note != None:
 
-            print("Move note", self.current_note.text)
+            # Deselect the note
+            self.note_view.deactivate_note()
+
+            # First fix note consistency
+            #(from, to, hobbes_db)
+            #fix_note_consistency(self.current_note.path, '/home/gef/Documents/Hobbes-many/hobbes_debug/hobbes_python/db/Work/IMDEA/Meetings/hello.m', self.hobbes_db)
+
+            # Then move the file
+
+            print("Move note", self.current_note.path)
 
     def delete_note(self, *l):
 

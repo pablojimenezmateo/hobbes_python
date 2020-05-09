@@ -98,6 +98,19 @@ class NoteTextPanel(BoxLayout):
             # Make sure the scroll is on top
             self.note_text_input.cursor = (0, 0)
 
+
+        # Puts the editor on "disabled" mode
+        def unload_note(self):
+
+            # Store the current path
+            self.current_note = None
+
+            self.note_text_input.text = ''
+            self.note_text_renderer.deactivate_note()
+
+            # Make sure the scroll is on top
+            self.note_text_input.cursor = (0, 0)
+
         # Saves the contents of the current editor to the current note
         def save_note(self):
 

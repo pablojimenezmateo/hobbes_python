@@ -46,17 +46,18 @@ class NoteView(GridLayout):
     # Store the note path to use with the search function
     path_dictionary = {}
 
-    def __init__(self, note_text_panel, **kwargs):
+    def __init__(self, note_text_panel, hobbes_db, **kwargs):
 
         self.active_note = None
         self.note_text_panel = note_text_panel
+        self.hobbes_db = hobbes_db
 
         super(NoteView, self).__init__(**kwargs)
 
         self.bind(minimum_height = self.setter('height'))
 
         # Context menu
-        self.context_menu = NoteViewContextMenu(size_hint=(.2, .3))
+        self.context_menu = NoteViewContextMenu(size_hint=(.2, .3), hobbes_db=self.hobbes_db, note_view=self)
 
     def add_notes(self, path):
 
@@ -86,3 +87,18 @@ class NoteView(GridLayout):
 
         # Send note to text input
         self.note_text_panel.load_note(self.active_note.path)
+
+    '''
+        This function enables to deactivate a note
+    '''
+    def deactivate_note(self):
+
+        # Background logic
+        if self.active_note != None:
+
+            self.active_note.background_color = NOTE_VIEW_NOT_ACTIVE_NOTE_COLOR # Background color of note
+
+        self.active_note = None
+
+        # Send note to text input
+        self.note_text_panel.unload_note()

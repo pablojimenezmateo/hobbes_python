@@ -52,6 +52,13 @@ class NoteTextRenderer(ScrollView):
 
         self.current_note_path = ''
 
+    def deactivate_note(self):
+
+        self.current_note_path = None
+        self.images_need_rerender = False
+        self.label.text = ''
+        self.is_new_note = False
+
     def on_new_note_open(self, current_note_path, text):
 
         self.current_note_path = current_note_path

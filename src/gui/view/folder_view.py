@@ -136,11 +136,6 @@ class FolderTreeView(TreeView):
 
                     return True
 
-            # There is no node under the cursor
-            else:
-
-                print("Not a leaf")
-
     def folder_opened_without_touch(self, node):
 
         self.active_node = node

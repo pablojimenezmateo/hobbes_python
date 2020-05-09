@@ -3,21 +3,6 @@ import fnmatch
 import re
 from shutil import copyfile
 
-'''
-
-    - When [moving a note, moving a folder] fix relative paths of attachments
-
-        - [Moving a note] Check that note text and fix path
-            - If it has been moved between root folders, copy the attachments to the other root folder
-        - [Moving a folder] Check all the notes on that directory and subdirectories
-            - If it has been moved between root folders, copy the attachments to the other root folder
-
-        - File example:   [file: Iaia_manual.pdf](../.attachments/cc304c8db3e8f4d190ed6aba143e99c0ed0e3c70df79d3305b1e40c43ce80285.pdf)
-        - Image example: ![local_image](../.attachments/77b9196aff91bb1a99484c40237870a239d31a0d168d43413588e300270ba272.png)
-
-        - https://stackoverflow.com/questions/4205854/python-way-to-recursively-find-and-replace-string-in-text-files
-'''
-
 # Function that will find all relatives paths on a note and change them accordingly
 # if the note is moved to a new root folder, the attachment will also be copied accordingly
 # Paths need to be absolute

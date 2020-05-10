@@ -46,11 +46,10 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
             - This can be achieved by putting a flag in MainScreen, so that the touch on the tree have a different
                 meaning when actived, and are handled by another handler
 
-        - Fix popup layouts
+        - Fix popup layouts -> Change to modal views
         - Add option to export to pdf
         - Implement contextual menu options
         - Allow to create root folders if no folder exists
-
 '''
       
 '''

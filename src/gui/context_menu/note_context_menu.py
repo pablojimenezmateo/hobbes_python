@@ -58,7 +58,6 @@ class NoteViewContextMenu(ModalView):
             info = TextinputPopup(title="Rename note", message="Insert folder name for note '%s'" % self.current_note.text, callback=self.rename_note, size_hint=(.2, .2))
             info.open()
 
-
     def move_note_popup(self, *l):
 
         if self.current_note != None:

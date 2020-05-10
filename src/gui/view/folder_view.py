@@ -68,6 +68,14 @@ class FolderTreeView(TreeView):
         self.hide_root=True
         self.bind(minimum_height = self.setter('height'))
 
+        # This modifies the behavior when touched:
+        # 0 works as folder view
+        # 1 returns the value of the touched folder to the move folder callback
+        # 2 returns the value of the touched folder to the move note callback
+        self.work_mode = 0
+        self.move_folder_callback = None
+        self.move_note_callback   = None
+
         self.notes_view = notes_view
         self.hobbes_db = hobbes_db
         self.active_node = None
@@ -126,15 +134,41 @@ class FolderTreeView(TreeView):
 
             self.active_node = self.get_node_at_pos((touch.x, touch.y))
             
-            if self.active_node != None:
+            # Normal mode
+            if self.work_mode == 0:
 
-                self.notes_view.add_notes(self.active_node.path)
+                if self.active_node != None:
 
-                if touch.button == 'right' or touch.is_double_tap:
+                    self.notes_view.add_notes(self.active_node.path)
 
-                    self.context_menu.menu_opened(self.active_node)
+                    if touch.button == 'right' or touch.is_double_tap:
+
+                        self.context_menu.menu_opened(self.active_node)
+
+                        return True
+
+            # Move folder mode
+            if self.work_mode == 1:
+
+                if touch.is_double_tap:
+
+                    self.move_folder_callback(self.active_node.path)
+
+                    self.work_mode = 0
 
                     return True
+
+            # Move note mode
+            if self.work_mode == 2:
+
+                if touch.is_double_tap:
+
+                    self.move_note_callback(self.active_node.path)
+
+                    self.work_mode = 0
+
+                    return True
+
 
     def folder_opened_without_touch(self, node):
 

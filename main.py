@@ -41,6 +41,7 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 '''
     TODO:
 
+        - Change pygame for other audio engine
         - Graphically allow to move a note/folder
             - This can be achieved by putting a flag in MainScreen, so that the touch on the tree have a different
                 meaning when actived, and are handled by another handler

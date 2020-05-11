@@ -76,6 +76,8 @@ class MainScreen(BoxLayout):
         self.folder_tree_view = FolderTreeView(size_hint_y=None, notes_view=self.notes_view, hobbes_db=hobbes_db)
         self.folder_tree_view_scroll.add_widget(self.folder_tree_view, 1)
 
+        self.notes_view.set_tree_view(self.folder_tree_view)
+
         # Add the tiny slider for the rain
         audio_layout = BoxLayout(orientation='vertical', size_hint=(.2, 1))
         audio_layout.add_widget(self.folder_tree_view_scroll)
@@ -178,6 +180,11 @@ class MainScreen(BoxLayout):
 
                 self.search_popup.clear_all()
                 self.search_popup.open()
+
+        # Disable move note/folder mode on keypress
+        else:
+            self.folder_tree_view.set_normal_mode()
+
 
     # Save the current note on exit
     def on_close(self, args):

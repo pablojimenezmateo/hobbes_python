@@ -102,3 +102,7 @@ class NoteView(GridLayout):
 
         # Send note to text input
         self.note_text_panel.unload_note()
+
+    def set_tree_view(self, tree_view):
+
+        self.context_menu.set_tree_view(tree_view)

@@ -100,13 +100,12 @@ class FolderTreeViewContextMenu(ModalView):
     '''
     def move_folder_popup(self, *l):
 
-        # Allow to pick where the folder goes
-        # Check that the path is valid
-        # Check that there is not a folder with that name already
-        self.move_folder()
+
+        self.tree_view.set_moving_folder_mode(self.move_folder)
+        
         self.dismiss()
 
-        # If the user clicks on another folder, the folder moves there
+        # If the user doubleclicks on another folder, the folder moves there
 
     def export_folder_popup(self, *l):
 
@@ -181,13 +180,19 @@ class FolderTreeViewContextMenu(ModalView):
         print("Renaming folder %s to %s" % (self.current_folder.text, text))
         popup.dismiss()
 
-    def move_folder(self):
+    def move_folder(self, new_path):
 
         # Here I need to check all the notes and fix their relative paths to the attachments
         if self.current_folder != None:
 
+            # Allow to pick where the folder goes
+            # Check that the path is valid
+            # Check that there is not a folder with that name already
+
             #fix_folder_consistency(self.current_folder.path, '/home/gef/Documents/Hobbes-many/hobbes_debug/hobbes_python/db/Work/IMDEA/', self.tree_view.hobbes_db)
-            print("Moving folder", self.current_folder.text)
+            print("Moving folder", self.current_folder.path, " to", new_path)
+            self.tree_view.rebuild_tree_view()
+
 
     def export_folder(self, popup):
 

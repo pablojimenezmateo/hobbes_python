@@ -128,6 +128,20 @@ class FolderTreeView(TreeView):
             # And select the node
             self.select_node(self.active_node)
 
+    def set_moving_folder_mode(self, callback):
+
+        self.work_mode = 1
+        self.move_folder_callback = callback
+
+    def set_moving_note_mode(self, callback):
+
+        self.work_mode = 2
+        self.move_note_callback = callback
+
+    def set_normal_mode(self):
+
+        self.work_mode = 0
+
     def custom_event_handler(self, touch):
 
         if touch.button != 'scrolldown' and touch.button != 'scrollup':

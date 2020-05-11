@@ -19,6 +19,7 @@ class NoteViewContextMenu(ModalView):
         self.hobbes_db = hobbes_db
         self.note_view = note_view
         self.title = "Menu"
+        self.tree_view = None
 
         self.context_menu = BoxLayout(orientation='vertical')
 
@@ -42,6 +43,10 @@ class NoteViewContextMenu(ModalView):
 
         self.current_note = None
 
+    def set_tree_view(self, tree_view):
+
+        self.tree_view = tree_view
+
     def menu_opened(self, note):
 
         self.current_note = note
@@ -62,11 +67,9 @@ class NoteViewContextMenu(ModalView):
 
         if self.current_note != None:
 
-            # Allow to pick where the note goes
-            # Check that the path is valid
-            # Check that there is not a note with that name already
+            self.tree_view.set_moving_note_mode(self.move_note)
+
             self.dismiss()
-            self.move_note()
 
     def delete_note_popup(self, *l):
 
@@ -90,10 +93,14 @@ class NoteViewContextMenu(ModalView):
 
             print("Rename note", self.current_note.text)
 
-    def move_note(self, *l):
+    def move_note(self, new_path):
 
         # Here I need to check all the notes and fix their relative paths to the attachments
         if self.current_note != None:
+
+            # Allow to pick where the note goes
+            # Check that the path is valid
+            # Check that there is not a note with that name already
 
             # Deselect the note
             self.note_view.deactivate_note()
@@ -104,7 +111,8 @@ class NoteViewContextMenu(ModalView):
 
             # Then move the file
 
-            print("Move note", self.current_note.path)
+            print("Moving note", self.current_note.path, " to", new_path)
+            self.tree_view.rebuild_tree_view()
 
     def delete_note(self, *l):
 

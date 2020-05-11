@@ -6,7 +6,12 @@ from src.util.attachments_consistency_functions import *
 
 from kivy.uix.modalview import ModalView
 
+from src.util.text_indexing_functions import *
+
 import os
+from functools import partial
+from shutil import move
+
 
 '''
     Contextual menu for the folder view
@@ -173,12 +178,30 @@ class FolderTreeViewContextMenu(ModalView):
 
         popup.dismiss()
 
-    def rename_folder(self, popup, text):
+    def rename_folder(self, popup, new_name):
 
-        # Here I need to check all the notes and fix their relative paths to the attachments
-
-        print("Renaming folder %s to %s" % (self.current_folder.text, text))
         popup.dismiss()
+
+        upper_folder = os.path.split(self.current_folder.path)[0]
+
+        new_path = os.path.join(upper_folder, new_name)
+
+        if not os.path.isdir(new_path):
+
+            # Reindex all the notes inside that folder
+            reindex_one_moving_folder(self.tree_view.hobbes_db, '.text_index', self.current_folder.path, new_path)
+
+            # Move the file
+            move(self.current_folder.path, new_path)
+
+            # Refresh tree
+            self.tree_view.rebuild_tree_view()
+
+        else:
+
+            info = InfoPopup(title="Renaming note", message="ERROR: Note already exists", size_hint=(.3, .2))
+            info.open()
+
 
     def move_folder(self, new_path):
 

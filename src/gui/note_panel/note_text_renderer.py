@@ -4,8 +4,6 @@ from kivy.core.window import Window
 from kivy.uix.image import Image
 from kivy.graphics import Rectangle, Color
 
-from src.util.text_indexing_functions import *
-
 import re
 import os
 

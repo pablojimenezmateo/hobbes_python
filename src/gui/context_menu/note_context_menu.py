@@ -4,9 +4,12 @@ from src.gui.popup.confirmation_popup import *
 from src.gui.context_menu.context_button import *
 from src.util.attachments_consistency_functions import *
 
+from src.util.text_indexing_functions import *
+
 from kivy.uix.modalview import ModalView
 
 from markdown import markdown
+from shutil import move
 
 '''
     Contextual menu for the note view
@@ -85,40 +88,84 @@ class NoteViewContextMenu(ModalView):
         if self.current_note != None:
             self.dismiss()
 
-    def rename_note(self, *l):
-
-        # Here I need to check all the notes and fix their relative paths to the attachments
+    def rename_note(self, instance, new_name):
 
         if self.current_note != None:
 
-            print("Rename note", self.current_note.text)
+            instance.dismiss()
+            new_path = os.path.join(os.path.dirname(self.current_note.path), new_name + '.md')
+
+            if not os.path.isfile(new_path):
+
+                # Deselect the note
+                self.note_view.deactivate_note()
+
+                # Move the file
+                move(self.current_note.path, new_path)
+
+                # Refresh tree
+                self.tree_view.folder_opened_without_touch(self.tree_view.active_node)
+
+                # Reindex the note
+                reindex_one_moved_note(self.hobbes_db, '.text_index', self.current_note.path, new_path)
+
+                self.current_note = None
+
+            else:
+ 
+                info = InfoPopup(title="Renaming note", message="ERROR: Note already exists", size_hint=(.3, .2))
+                info.open()
 
     def move_note(self, new_path):
 
         # Here I need to check all the notes and fix their relative paths to the attachments
         if self.current_note != None:
 
-            # Allow to pick where the note goes
-            # Check that the path is valid
-            # Check that there is not a note with that name already
+            # Add the filename to the new path
+            new_path = os.path.join(new_path, os.path.basename(self.current_note.path))
+
+            if not os.path.isfile(new_path):
+ 
+                 # Deselect the note
+                self.note_view.deactivate_note()
+
+                # First fix note consistency
+                fix_note_consistency(self.current_note.path, new_path, self.hobbes_db)
+ 
+                # Then move the file
+                move(self.current_note.path, new_path)
+ 
+                # Refresh tree
+                self.tree_view.folder_opened_without_touch(self.tree_view.active_node)
+
+                # Reindex the note
+                reindex_one_moved_note(self.hobbes_db, '.text_index', self.current_note.path, new_path)
+
+                self.current_note = None
+            else:
+ 
+                info = InfoPopup(title="Moving note", message="ERROR: Note already exists", size_hint=(.3, .2))
+                info.open()
+
+    def delete_note(self, instance):
+
+        instance.dismiss()
+
+        if self.current_note != None:
 
             # Deselect the note
             self.note_view.deactivate_note()
 
-            # First fix note consistency
-            #(from, to, hobbes_db)
-            #fix_note_consistency(self.current_note.path, '/home/gef/Documents/Hobbes-many/hobbes_debug/hobbes_python/db/Work/IMDEA/Meetings/hello.m', self.hobbes_db)
+            # Remove the file
+            os.remove(self.current_note.path)
 
-            # Then move the file
+            # Refresh tree
+            self.tree_view.folder_opened_without_touch(self.tree_view.active_node)
 
-            print("Moving note", self.current_note.path, " to", new_path)
-            self.tree_view.rebuild_tree_view()
+            # Delete from index
+            del_doc(self.hobbes_db, '.text_index', self.current_note.path)
 
-    def delete_note(self, *l):
-
-        if self.current_note != None:
-
-            print("Delete note", self.current_note.text)
+            self.current_note = None
 
     def import_note_to_pdf(self, in_path, out_path):
 

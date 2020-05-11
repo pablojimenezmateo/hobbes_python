@@ -101,7 +101,7 @@ class MainScreen(BoxLayout):
         '''
             Indexing new files
         '''
-        index_my_docs(hobbes_db, '.text_index', False)
+        index_my_docs(hobbes_db, '.text_index', True)
 
         '''
             Git sync
@@ -109,7 +109,6 @@ class MainScreen(BoxLayout):
         # Create a commit every 30 seconds and a push every 5 minutes
         Clock.schedule_interval(self.do_commit, 30)
         Clock.schedule_interval(self.do_push, 300)
-
 
     # This method commits all top level folders from the db
     def do_commit(self, dt):

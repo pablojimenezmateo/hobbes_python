@@ -7,6 +7,8 @@ from shutil import copyfile
 from src.gui.note_panel.note_text_input import *
 from src.gui.note_panel.note_text_renderer import *
 
+from src.util.text_indexing_functions import *
+
 '''
     Combination of the text editor and renderer, I write my notes in Markdown
 '''

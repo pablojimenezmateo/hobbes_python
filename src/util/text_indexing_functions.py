@@ -5,6 +5,7 @@ from whoosh.qparser import MultifieldParser
 import datetime
 import os
 from itertools import tee
+import fnmatch
 
 '''
     From the Whoosh docs, incremental indexing of the files
@@ -63,6 +64,18 @@ def add_doc(writer, path):
     modification_time = datetime.datetime.fromtimestamp(mtime)
 
     writer.add_document(path=path, content=content.decode("utf-8", "strict"), title=title, time=modification_time)
+
+# Deletes a document
+def del_doc(db_path, dirname, note_path):
+
+    ix = index.open_dir(os.path.join(db_path, dirname))
+
+    with ix.searcher() as searcher:
+
+        writer = ix.writer()
+        writer.delete_by_term('path', note_path)
+
+        writer.commit()
 
 def incremental_index(db_path, dirname):
 
@@ -129,6 +142,58 @@ def reindex_one_note(db_path, dirname, note_path):
         writer = ix.writer()
         writer.delete_by_term('path', note_path)
         add_doc(writer, note_path)
+
+        writer.commit()
+
+# Recursively reindexes all notes on a given dir, useful when moving folders
+def reindex_one_moving_folder(db_path, dirname, prev_path, new_path):
+
+    # Find all notes
+    for path, dirs, files in os.walk(prev_path):
+        for filename in fnmatch.filter(files, "*.md"):
+
+            old_note_path = os.path.join(path, filename)
+
+            new_note_path = old_note_path.replace(prev_path, new_path)
+
+            reindex_moving_note(db_path, dirname, old_note_path, new_note_path)
+
+# Reindexes a note before it is moved, useful when using shutil.move
+def reindex_moving_note(db_path, dirname, old_note_path, new_note_path):
+
+    ix = index.open_dir(os.path.join(db_path, dirname))
+
+    with ix.searcher() as searcher:
+
+        writer = ix.writer()
+        writer.delete_by_term('path', old_note_path)
+
+        fileobj = open(old_note_path, "rb")
+        content = fileobj.read()
+        fileobj.close()
+        title = os.path.basename(old_note_path).split(".")[0]
+
+        # The last time the file was modified
+        mtime = os.path.getmtime(old_note_path)
+
+        # Convert seconds since epoch to readable timestamp
+        modification_time = datetime.datetime.fromtimestamp(mtime)
+
+        writer.add_document(path=new_note_path, content=content.decode("utf-8", "strict"), title=title, time=modification_time)
+
+        writer.commit()
+
+
+# Reindexes only one file with a different path, useful when moving a note
+def reindex_one_moved_note(db_path, dirname, old_note_path, new_note_path):
+
+    ix = index.open_dir(os.path.join(db_path, dirname))
+
+    with ix.searcher() as searcher:
+
+        writer = ix.writer()
+        writer.delete_by_term('path', old_note_path)
+        add_doc(writer, new_note_path)
 
         writer.commit()
 

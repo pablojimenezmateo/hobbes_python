@@ -67,7 +67,7 @@ def fix_folder_consistency(old_path, new_path, hobbes_db):
 
     new_absolute_path = os.path.join(new_path, os.path.split(old_path)[-1])
 
-    # FInd all notes
+    # Find all notes
     for path, dirs, files in os.walk(old_path):
         for filename in fnmatch.filter(files, "*.md"):
 

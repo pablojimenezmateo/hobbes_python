@@ -102,8 +102,11 @@ class FolderTreeView(TreeView):
 
         print("Hi", os.path.dirname(aux_path), os.path.dirname(aux_path))
 
-        self.active_node = self.path_dictionary[os.path.dirname(aux_path)]
+        if os.path.dirname(aux_path) in self.path_dictionary:
+            self.active_node = self.path_dictionary[os.path.dirname(aux_path)]
 
+        else:
+            self.active_node = None
 
         if self.active_node != None:
 

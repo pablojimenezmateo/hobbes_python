@@ -10,7 +10,7 @@ from src.util.text_indexing_functions import *
 
 import os
 from functools import partial
-from shutil import move
+from shutil import move, rmtree
 
 
 '''
@@ -261,9 +261,22 @@ class FolderTreeViewContextMenu(ModalView):
 
     def delete_folder(self, popup):
 
-        # IMPORTANT: Set self.tree_view.active_node = None
+        popup.dismiss()
 
         if self.current_folder != None:
 
-            print("Deleting folder", self.current_folder.text)
-            popup.dismiss()
+            # Remove the notes from the index
+            delete_folder(self.tree_view.hobbes_db, '.text_index', self.current_folder.path)
+
+            # Deactivate current note
+            self.tree_view.notes_view.deactivate_note()
+
+            # Delete the folder
+            rmtree(self.current_folder.path)
+
+            # Refresh tree
+            self.tree_view.rebuild_tree_view()
+
+            # Refresh note view
+            self.tree_view.notes_view.remove_all_notes_from_view()   
+

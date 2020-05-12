@@ -132,6 +132,16 @@ def incremental_index(db_path, dirname):
 
         writer.commit()
 
+# Removes all notes from indexer
+def delete_folder(db_path, dirname, folder_path):
+
+    # Find all notes
+    for path, dirs, files in os.walk(folder_path):
+        for filename in fnmatch.filter(files, "*.md"):
+
+            note_path = os.path.join(path, filename)
+            del_doc(db_path, dirname, note_path)
+
 # Reindexes only one file, useful when saving a note
 def reindex_one_note(db_path, dirname, note_path):
 

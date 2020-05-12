@@ -182,6 +182,9 @@ class FolderTreeViewContextMenu(ModalView):
 
         popup.dismiss()
 
+        # Deactivate current note
+        self.tree_view.notes_view.deactivate_note()
+
         upper_folder = os.path.split(self.current_folder.path)[0]
 
         new_path = os.path.join(upper_folder, new_name)
@@ -197,9 +200,12 @@ class FolderTreeViewContextMenu(ModalView):
             # Refresh tree
             self.tree_view.rebuild_tree_view()
 
+            # Refresh note view
+            self.tree_view.notes_view.remove_all_notes_from_view()   
+
         else:
 
-            info = InfoPopup(title="Renaming note", message="ERROR: Note already exists", size_hint=(.3, .2))
+            info = InfoPopup(title="Renaming folder", message="ERROR: Folder already exists", size_hint=(.3, .2))
             info.open()
 
 
@@ -208,13 +214,42 @@ class FolderTreeViewContextMenu(ModalView):
         # Here I need to check all the notes and fix their relative paths to the attachments
         if self.current_folder != None:
 
-            # Allow to pick where the folder goes
-            # Check that the path is valid
-            # Check that there is not a folder with that name already
+            # Check it the new path is a subpath of the current path
+            # folders cannot be moved into their children
+            if self.current_folder.path in new_path:
 
-            #fix_folder_consistency(self.current_folder.path, '/home/gef/Documents/Hobbes-many/hobbes_debug/hobbes_python/db/Work/IMDEA/', self.tree_view.hobbes_db)
+                info = InfoPopup(title="Moving folder", message="ERROR: Folder cannot be moved to its child", size_hint=(.3, .2))
+                info.open()
+                return
+
+            # Deactivate current note
+            self.tree_view.notes_view.deactivate_note()
+
+            new_path = os.path.join(new_path, os.path.basename(self.current_folder.path))
+
             print("Moving folder", self.current_folder.path, " to", new_path)
-            self.tree_view.rebuild_tree_view()
+
+            if not os.path.isdir(new_path):
+
+                # Fix folder consistency first
+                fix_folder_consistency(self.current_folder.path, new_path, self.tree_view.hobbes_db)
+
+                # Reindex all the notes inside that folder
+                reindex_one_moving_folder(self.tree_view.hobbes_db, '.text_index', self.current_folder.path, new_path)
+
+                # Then move the folder
+                move(self.current_folder.path, new_path)
+
+                # Refresh tree
+                self.tree_view.rebuild_tree_view()
+
+                # Refresh note view
+                self.tree_view.notes_view.remove_all_notes_from_view()        
+
+            else:
+
+                info = InfoPopup(title="Moving folder", message="ERROR: Folder already exists", size_hint=(.3, .2))
+                info.open()
 
 
     def export_folder(self, popup):

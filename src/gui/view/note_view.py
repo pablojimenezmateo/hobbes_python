@@ -100,9 +100,17 @@ class NoteView(GridLayout):
 
         self.active_note = None
 
-        # Send note to text input
+        # Unload note from text input
         self.note_text_panel.unload_note()
 
     def set_tree_view(self, tree_view):
 
         self.context_menu.set_tree_view(tree_view)
+
+    '''
+        Removes all notes from the view
+    '''
+    def remove_all_notes_from_view(self):
+
+        self.clear_widgets()
+        self.path_dictionary = {}

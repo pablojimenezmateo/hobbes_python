@@ -23,12 +23,12 @@ def fix_note_consistency(old_path, new_path, hobbes_db):
 
             if 'local_image' in match[0] or 'file: ' in match[0]:
 
-                print("Path", match[1])
-
                 # Get the absolute path of the attachment
+                prev_dir = os.getcwd()
                 os.chdir(os.path.split(old_path)[0]) 
                 old_attachment_path = os.path.abspath(match[1])
                 attachment_name = os.path.basename(old_attachment_path)
+                os.chdir(prev_dir)
 
                 # Get the root folder of the new location
                 new_root_folder_name = new_path.replace(hobbes_db, '').split('/')[1]
@@ -52,9 +52,7 @@ def fix_note_consistency(old_path, new_path, hobbes_db):
                 # Add the correctly formated relative URL
                 relative_path = os.path.relpath(new_attachment_path, os.path.split(new_path)[0])
 
-                print("Change from", match[1], " to", relative_path)
                 new_text = new_text.replace(match[1], relative_path)
-
 
         # Write the corrected paths to the file
         with open(old_path, "w") as f:
@@ -65,7 +63,7 @@ def fix_note_consistency(old_path, new_path, hobbes_db):
 # fix_note_consistency function accoredingly
 def fix_folder_consistency(old_path, new_path, hobbes_db):
 
-    new_absolute_path = os.path.join(new_path, os.path.split(old_path)[-1])
+    new_absolute_path = new_path #os.path.join(new_path, os.path.split(old_path)[-1])
 
     # Find all notes
     for path, dirs, files in os.walk(old_path):

@@ -23,7 +23,7 @@ class NoteButton(Button):
         self.context_menu = context_menu
         self.note_view = note_view
         self.path = path
-        
+       
     def on_touch_down(self, touch):
 
         if self.collide_point(touch.x, touch.y):
@@ -67,7 +67,7 @@ class NoteView(GridLayout):
         for file in sorted_nicely(os.listdir(path)):
             if file.endswith(".md"):
 
-                nb = NoteButton(context_menu=self.context_menu, note_view=self, text=file.split(".")[0], path=os.path.join(path, file), size_hint=(1, None), size=(0, 20), text_size=(self.width, None), halign='left')
+                nb = NoteButton(context_menu=self.context_menu, note_view=self, text=file.split(".")[0], path=os.path.join(path, file), size_hint=(1, None), text_size=(self.width, None), halign='left')
                 self.add_widget(nb)
 
                 self.path_dictionary[os.path.join(path, file)] = nb

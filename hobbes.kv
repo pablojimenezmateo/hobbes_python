@@ -48,6 +48,11 @@
     color: 0, 0, 0, 1            # Note text color
     border: 0, 0, 0, 0
 
+    # This makes the height of the buttons adjust
+    # according the text size
+    text_size: self.width, None
+    height: self.texture_size[1]*1.2
+
 	canvas.after:
         Color:
             rgba: 0, 0, 0, 0.5

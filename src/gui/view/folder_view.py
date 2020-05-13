@@ -147,7 +147,7 @@ class FolderTreeView(TreeView):
 
     def custom_event_handler(self, touch):
 
-        if touch.button != 'scrolldown' and touch.button != 'scrollup':
+        if touch.button == 'right' or touch.button == 'left' or touch.is_double_tap:
 
             self.active_node = self.get_node_at_pos((touch.x, touch.y))
             

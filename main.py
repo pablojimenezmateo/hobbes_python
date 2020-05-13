@@ -41,10 +41,7 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 '''
     TODO:
 
-        - Complete contextual options
-            - move_folder
-            - delete_folder
-
+        - Fix note view buttons for long text
         - Implement options to export to pdf
 
         - Change pygame for other audio engine

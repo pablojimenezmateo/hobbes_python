@@ -41,7 +41,11 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 '''
     TODO:
 
-        - Fix note view buttons for long text
+
+        - There are issues with the images
+        - Convert tabs to '    '
+        - Normal links should be clickable
+
         - Implement options to export to pdf
 
         - Change pygame for other audio engine
@@ -191,6 +195,7 @@ class MainScreen(BoxLayout):
 class HobbesApp(App):
 
     def build(self):
+        self.title = 'Hobbes'
 
         # Create the db folder if it does not exist
         if not os.path.exists(hobbes_db):

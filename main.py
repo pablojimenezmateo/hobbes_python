@@ -41,6 +41,8 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
 '''
     TODO:
 
+        - Push is not working correctly
+            - There is no origin set and it crashes the thread
 
         - There are issues with the images
         - Convert tabs to '    '

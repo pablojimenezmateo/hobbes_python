@@ -1,5 +1,6 @@
 db/**
 db_test/**
+db_test/
 .buildozer
 .android
 bin

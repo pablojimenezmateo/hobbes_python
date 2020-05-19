@@ -12,6 +12,7 @@ from kivy.config import Config
 Config.set('kivy', 'exit_on_escape', '0')
 Config.set('graphics', 'maxfps', '30')
 Config.set('kivy','window_icon','media/images/icon.png')
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 from kivy.app import App
 from src.gui.context_menu.context_button import *

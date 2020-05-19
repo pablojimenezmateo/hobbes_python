@@ -31,10 +31,16 @@ def git_commit(path):
         repo = Repo.init(path)
 
     # Add new changes
-    repo.git.add('--all')
+    repo.git.add('-A')
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     device_name = socket.gethostname()
-    repo.index.commit('Changes: ' + date + ' Device: ' + device_name)
+
+    try:
+        repo.git.commit('-m Changes: ' + date + ' Device: ' + device_name)
+
+    except:
+
+        print("Nothing new to commit")
 
 '''
     Given a folder, if there is no .git create it

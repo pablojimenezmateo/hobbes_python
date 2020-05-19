@@ -51,6 +51,7 @@ hobbes_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db')
         - There are issues with the images
         - Convert tabs to '    '
         - Normal links should be clickable
+        - Bug with the codeblocks, the first word is missing
 
         - Implement options to export to pdf
 

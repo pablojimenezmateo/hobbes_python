@@ -2,7 +2,10 @@ import os
 
 if os.name == 'nt':
     os.environ['KIVY_GL_BACKEND'] = 'sdl2'
-    os.environ['GIT_PYTHON_GIT_EXECUTABLE'] = 'C:\Program Files\Git\cmd\git.exe'
+    os.environ['GIT_PYTHON_GIT_EXECUTABLE'] = r'C:\Program Files\Git\cmd\git.exe'
+    os.environ['KIVY_SDL2_DEPENDENCY_WALKER'] = r'C:\Users\Gef\Downloads\depends22_x64\depends.exe'
+    
+    #'C:\Users\Gef\Downloads\depends22_x64\depends.exe'
 
 import kivy
 kivy.require('1.11.1') # Kivy version

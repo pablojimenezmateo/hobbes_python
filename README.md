@@ -14,6 +14,41 @@ My own notetaking application.
 * There is a tiny slider on the bottom left that plays rain sounds when volume > 0 (if volume is zero the sound stops all together)
 * Crossplatform (Linux, Windows, Mac)
 
+
+## How to build in Windows
+
+1. Install [Python 3.x](https://www.python.org/downloads/release/python-383/) make sure it is added to the path
+2. Install virtualenv
+	```
+	python -m pip install virtualenv
+	```
+3. Create the virtual environment
+	```
+	 python -m venv C:\Users\Gef\Documents\venv_hobbes_python
+	```
+4. Activate the environment
+	```
+	C:\Users\Gef\Documents\venv_hobbes_python\Scripts\activate.bat
+	```
+5. Install the requirements
+	```
+	python -m pip install -r .\requirements.txt
+	```
+
+6. Install pycairo
+	```
+	python -m pip install https://download.lfd.uci.edu/pythonlibs/s2jqpv5t/pycairo-1.19.1-cp37-cp37m-win_amd64.whl
+	```
+7. Install git
+	```
+	https://gitforwindows.org/
+	```
+8. Install PyInstaller
+	```
+	python -m pip install pyinstaller
+	```
+
+
 ## Dependencies
 
 ```

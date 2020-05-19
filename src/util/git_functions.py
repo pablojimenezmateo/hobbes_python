@@ -30,11 +30,11 @@ def git_commit(path):
 
         repo = Repo.init(path)
 
-        # Add new changes
-        repo.git.add('--all')
-        date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        device_name = socket.gethostname()
-        repo.index.commit('Changes: ' + date + ' Device: ' + device_name)
+    # Add new changes
+    repo.git.add('--all')
+    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    device_name = socket.gethostname()
+    repo.index.commit('Changes: ' + date + ' Device: ' + device_name)
 
 '''
     Given a folder, if there is no .git create it
@@ -58,10 +58,12 @@ def git_commit_and_push(path):
         git_is_local = True
 
         try:
-            repo.git.checkout('master')
+            repo.remote(name='origin')
             git_is_local = False
 
-        except exc.GitCommandError:
+        except ValueError:
+
+            print("Local only")
             git_is_local = True
             git_commit(path)
 

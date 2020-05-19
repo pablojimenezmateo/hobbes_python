@@ -1,6 +1,8 @@
 import os
-#os.environ['KIVY_GL_BACKEND'] = 'sdl2'
-os.environ['GIT_PYTHON_GIT_EXECUTABLE'] = 'C:\Program Files\Git\cmd\git.exe'
+
+if os.name == 'nt':
+    os.environ['KIVY_GL_BACKEND'] = 'sdl2'
+    os.environ['GIT_PYTHON_GIT_EXECUTABLE'] = 'C:\Program Files\Git\cmd\git.exe'
 
 import kivy
 kivy.require('1.11.1') # Kivy version
@@ -132,7 +134,7 @@ class MainScreen(BoxLayout):
                 git_commit_threaded(path)
 
     # This method pushes all top level folders from the db
-    def do_push(self, dt):
+    def do_push(self, dt=0):
 
         for path in self.folder_tree_view.path_dictionary:
 
@@ -186,6 +188,10 @@ class MainScreen(BoxLayout):
 
                 self.search_popup.clear_all()
                 self.search_popup.open()
+
+        elif 'ctrl' in modifier and codepoint == 'r':
+
+            self.do_push()
 
         # Disable move note/folder mode on keypress
         else:

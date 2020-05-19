@@ -153,9 +153,9 @@ class NoteTextPanel(BoxLayout):
                         fb = f.read(65536)
 
                 # Create the file on the .attachments folder
-                dst_path = self.current_note.replace(hobbes_db, '').split(os.sep)[1]
+                dst_path = self.current_note.replace(self.hobbes_db, '').split(os.sep)[1]
                 base_folder = dst_path
-                dst_path = os.path.join(hobbes_db, dst_path)
+                dst_path = os.path.join(self.hobbes_db, dst_path)
                 dst_path = os.path.join(dst_path, '.attachments')
 
                 # Create the attachment folder if it does not exist
@@ -163,7 +163,7 @@ class NoteTextPanel(BoxLayout):
 
                     os.mkdir(dst_path)
 
-                extension = os.path.basename(file_path.decode("utf-8", "strict")).split(".")[1]
+                extension = os.path.basename(file_path.decode("utf-8", "strict")).split(".")[-1]
                 old_name = os.path.basename(file_path.decode("utf-8", "strict"))
                 new_name = file_hash.hexdigest() + '.' + extension
 
@@ -181,8 +181,8 @@ class NoteTextPanel(BoxLayout):
                     print("Error copying file")
 
                 # Add the correctly formated relative URL
-                attachment_path = os.path.join(hobbes_db, os.path.join(base_folder, '.attachments'))
-                relative_path = os.path.relpath(os.path.join(hobbes_db, attachment_path), os.path.split(self.current_note)[0])
+                attachment_path = os.path.join(self.hobbes_db, os.path.join(base_folder, '.attachments'))
+                relative_path = os.path.relpath(os.path.join(self.hobbes_db, attachment_path), os.path.split(self.current_note)[0])
 
                 if is_image:
 

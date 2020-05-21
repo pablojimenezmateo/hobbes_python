@@ -2,7 +2,9 @@ from src.gui.popup.info_popup import *
 from src.gui.popup.textinput_popup import *
 from src.gui.popup.confirmation_popup import *
 from src.gui.context_menu.context_button import *
+from src.gui.context_menu.file_chooser import *
 from src.util.attachments_consistency_functions import *
+
 
 from src.util.text_indexing_functions import *
 
@@ -86,6 +88,9 @@ class NoteViewContextMenu(ModalView):
     def export_note_popup(self, *l):
 
         if self.current_note != None:
+
+            file_chooser = SaveDialog(hobbes_db=self.hobbes_db)
+            file_chooser.show_save()
             self.dismiss()
 
     def rename_note(self, instance, new_name):

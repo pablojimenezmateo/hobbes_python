@@ -98,10 +98,6 @@ a = Analysis(['main.py'],
             'kivy.core.image.img_pygame',
             'kivy.core.image.img_tex',
 
-            'kivy.core.window.window_egl_rpi',
-            'kivy.core.window.window_info',
-            'kivy.core.window.window_pygame',
-
             'kivy.graphics.cgl_backend.cgl_debug',
             'kivy.graphics.cgl_backend.cgl_mock',
 

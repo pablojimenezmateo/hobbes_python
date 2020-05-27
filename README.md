@@ -15,6 +15,8 @@ My own notetaking application.
 * Crossplatform (Linux, Windows, Mac)
 
 
+![screenshot](media/Screenshot.png)
+
 ## How to build in Windows
 
 1. Install [Python 3.x](https://www.python.org/downloads/release/python-383/) make sure it is added to the path
@@ -32,22 +34,29 @@ My own notetaking application.
 	```
 5. Install the requirements
 	```
-	python -m pip install -r .\requirements.txt
+	python -m pip install -r .\requirements_windows.txt
 	```
 
-6. Install pycairo
-	```
-	python -m pip install https://download.lfd.uci.edu/pythonlibs/s2jqpv5t/pycairo-1.19.1-cp37-cp37m-win_amd64.whl
-	```
-7. Install git
+6. Install git
 	```
 	https://gitforwindows.org/
 	```
-8. Install PyInstaller
+7. Install PyInstaller
 	```
 	python -m pip install pyinstaller
 	```
+	
+8. Build the application
+	```
+	python -m PyInstaller .\main_windows.spec
+	```
 
+9. Bundle the app
+	```
+	Copy everything from the dist/main folder into the build/main folder
+	```
+	
+10. Your app is in the folder build/main
 
 ## Dependencies
 

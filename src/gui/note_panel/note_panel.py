@@ -91,7 +91,7 @@ class NoteTextPanel(BoxLayout):
             self.current_note = path
 
             # Open note
-            with open(path, 'r') as note:
+            with open(path, 'r', encoding="utf8") as note:
                 text = note.read()
 
             self.note_text_input.text = text
@@ -120,7 +120,7 @@ class NoteTextPanel(BoxLayout):
 
                 print("Writting", self.note_text_input.text, " to", self.current_note)
 
-                with open(self.current_note, 'w') as note:
+                with open(self.current_note, 'w', encoding="utf8") as note:
                     note.write(self.note_text_input.text)
 
                 self.current_note_saved = True

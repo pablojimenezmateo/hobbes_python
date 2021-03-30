@@ -35,7 +35,7 @@ ptyprocess==0.6.0
 pycairo @ https://download.lfd.uci.edu/pythonlibs/s2jqpv5t/pycairo-1.19.1-cp37-cp37m-win_amd64.whl
 pycparser==2.20
 pygame==1.9.6
-Pygments==2.6.1
+Pygments==2.7.4
 PyInstaller==3.6
 pyperclip==1.8.0
 Pyphen==0.9.5
